@@ -60,7 +60,7 @@ You need Docker, Python 3 with Pillow, and a checkout of [mpc-vst-plugins](https
 ```
 ./build.sh test               # x86 engine + the wrapper's host test (ASan/UBSan)
 ./build.sh all                # aarch64 vst/build/aarch64/je8086.so + the skin
-tools/package_310.sh 0.1.0    # dist/JE-8086-0.1.0-VST2-Plugins.zip
+tools/package_310.sh 0.1.1    # dist/JE-8086-0.1.1-VST2-Plugins.zip
 ```
 `build/<arch>/je8086_engine_test <dir with roms/>` boots the ROM and checks notes, presets, parameters and the saved state. Run the aarch64 one on the device.
 
