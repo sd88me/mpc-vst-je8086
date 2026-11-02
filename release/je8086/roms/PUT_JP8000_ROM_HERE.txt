@@ -1,0 +1,2 @@
+Put your own Roland JP-8000 firmware here: the eight OS update files (_00001.mid ... _00008.mid, 79372 bytes each),
+or a full ROM image (.bin). No ROM ships with JE-8086 and none may be shared. The plugin looks when it loads.

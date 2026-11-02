@@ -1,0 +1,1 @@
+Optional: JP-8000 patch or performance banks (.syx .mid .pat .pfm .j8k). Each file becomes a bank after the ROM's own.

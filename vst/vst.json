@@ -1,0 +1,35 @@
+{
+  "name": "JE-8086",
+  "vendor": "sd88me",
+  "uid": "JE86",
+  "version": 1000,
+  "targets": [
+    "aarch64"
+  ],
+  "so": "je8086.so",
+  "params": "params.json",
+  "art": "html",
+  "defines": {
+    "HAS_DISPLAY_REV": 1,
+    "DISPLAY_REV_NO_UPDATE": 1,
+    "MODULE_SUBDIR": "\"je8086\"",
+    "MODULE_DIR": "\"/sdcard/vst/je8086\"",
+    "PARAM_TEXT_MAX": 64
+  },
+  "build": {
+    "root": "..",
+    "sources": [],
+    "cflags": [],
+    "libs": [
+      "vst/build/engine/libje8086_all.a",
+      "-Wl,--exclude-libs,ALL",
+      "-static-libstdc++",
+      "-static-libgcc",
+      "-lstdc++",
+      "-lm",
+      "-ldl"
+    ]
+  },
+  "layout": "layout.conf",
+  "tile": "images/tile.png"
+}

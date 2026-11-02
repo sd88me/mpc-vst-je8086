@@ -1,0 +1,291 @@
+#include "je8086.h"
+
+#include "jePipeline.h"
+
+#include "baseLib/filesystem.h"
+
+#include "synthLib/deviceException.h"
+
+namespace jeLib
+{
+	Je8086::Je8086(const std::vector<uint8_t>& _romData, const std::string& _ramDataFilename)
+	: ports([this](devices::Port* _port) { onLedsChanged(_port); })
+	, midi(0, [this](uint8_t _byte) { onReceiveMidiByte(_byte); })
+	, m_midiOutParser(synthLib::MidiEventSource::Device)
+	, m_midiInRateLimiter([this](const uint8_t _byte) { midi.provideMIDI(&_byte, 1); })
+	{
+		if (_romData.empty())
+			throw synthLib::DeviceException(synthLib::DeviceError::FirmwareMissing, "ROM data is empty");
+
+		std::vector<unsigned char> ram;
+		baseLib::filesystem::readFile(ram, _ramDataFilename);
+
+		m_factoryreset = ram.size() != 256 * 1024;
+
+		emu.loadmem(_romData.data(),(int)_romData.size(), 0);
+
+		if (!m_factoryreset) 
+			emu.loadmem(ram.data(), static_cast<int>(ram.size()), 0x200000);
+
+		emu.memmap(&catchall, (int)_romData.size(), 0x200000 - (int)_romData.size());	// access to gap between flash and sram
+		emu.memmap(&catchall, 0x240000, 0xFFFD10 - 0x240000);	// access to gap between end of SRAM and start of on-chip ram
+		emu.memmap(&catchall, 0xFFFF10, 0xFFFF1C - 0xFFFF10);	// access to gap between end of on-chip ram and hw registers
+		emu.memmap(&catchall, 0x410000, 0x600000 - 0x410000);	// access to gap between asic and lcd/keys
+		emu.memmap(&asics, 0x400000, 0x10000);
+		emu.memmap(&keyscanner, 0x600000, 4);
+		emu.memmap(&lcd, 0x600004, 2);
+		emu.memmap(&hwregs, 0xffff1c, 0xe4);
+		emu.memmap(&faders, 0xffffe0, 9);	// ADC controls
+		emu.memmap(&faders, 0xffffcb, 1);	// port 6
+		emu.memmap(&timers, 0xffff60, 64);	// timers
+		emu.memmap(&ports, 0xffffd3, 2);
+		emu.memmap(&ports, 0xffffd6, 1);
+		emu.memmap(&midi, 0xffffb0, 6);
+		emu.boot();
+
+		if (m_factoryreset)
+		{
+			runfactoryreset(_ramDataFilename); // Run a factory reset if needs be.
+			return;
+		}
+
+		asics.setPostSample([this](const int32_t _left, const int32_t _right) { onReceiveSample(_left, _right); });
+
+		m_midiInRateLimiter.setSamplerate(88200.0f);
+		m_midiInRateLimiter.setDefaultRateLimit();
+		m_midiInRateLimiter.setSysexPause(0.021f);	// according to manual 20ms pause between sysex patch messages
+		m_midiInRateLimiter.setSysexPauseLengthThreshold(100);
+
+		lcd.setChangeCallback([this] { onLcdDdRamChanged(); });
+		lcd.setCgRamChangeCallback([this] { onLcdCgRamChanged(); });
+	}
+
+	void Je8086::addMidiEvent(const synthLib::SMidiEvent& _event)
+	{
+		m_midiInEvents.push_back(_event);
+	}
+
+	void Je8086::readMidiOut(std::vector<synthLib::SMidiEvent>& _events)
+	{
+		m_midiOutParser.getEvents(m_midiOutEvents);
+
+		if (_events.empty())
+		{
+			std::swap(_events, m_midiOutEvents);
+		}
+		else
+		{
+			_events.insert(_events.end(), m_midiOutEvents.begin(), m_midiOutEvents.end());
+			m_midiOutEvents.clear();
+		}
+	}
+
+	void Je8086::step()
+	{
+		uint64_t now = emu.getCycles();
+
+		if (now > 12776184)// && !((++ctr) & 0x3fff))
+		{
+			for (auto& m : m_midiInEvents)
+				m_midiInRateLimiter.write(std::move(m));
+			m_midiInEvents.clear();
+		}
+
+		/* First step on this thread: this is where the pipeline has to be built,
+		 * because the stage state it installs is thread_local. */
+		if (m_pipelineRequested && !m_pipeline)
+		{
+			m_pipelineRequested = false;
+			m_pipeline.reset(new JePipeline(*this, m_pipelineBounds, m_pipelineCores));
+			if (!m_pipeline->valid())
+				m_pipeline.reset();	// bad split; stay serial
+		}
+
+		emu.step();
+		timers.tick();
+		midi.tick();
+
+		asics.runForCycles(emu.getCycles() * 1323 / 625); // Convert from uC cycles to DSP steps. (this is (clockrate / 2) / (uc clock = 16000000), simplified)
+
+		if (m_pipeline)
+		{
+			/* Audio is produced on the last stage's thread but must be appended
+			 * here: the sample buffer and the MIDI rate limiter behind it belong
+			 * to this thread. */
+			m_pipeline->refreshParentReadbacks();
+			m_pipeline->deliver([this](const int32_t _l, const int32_t _r) { onReceiveSample(_l, _r); }, m_pipelineWindow);
+		}
+	}
+
+	void Je8086::setButton(const devices::SwitchType _type, const bool _pressed)
+	{
+		ports.press(_type, _pressed);
+	}
+
+	void Je8086::onLedsChanged(devices::Port*/* _port*/)
+	{
+		/*
+		for(uint32_t i=0; i<66; ++i) 
+			_port->getLed(i);
+		*/
+	}
+
+	void Je8086::onReceiveMidiByte(uint8_t _byte)
+	{
+		m_midiOutParser.write(_byte);
+	}
+
+	Je8086::~Je8086() = default;
+
+	void Je8086::requestParallelPipeline(const std::vector<int>& _bounds, const std::vector<int>& _cores, const int64_t _window)
+	{
+		m_pipelineBounds = _bounds;
+		m_pipelineCores = _cores;
+		m_pipelineWindow = _window < 1 ? 1 : _window;
+		m_pipelineRequested = !_bounds.empty();
+	}
+
+	bool Je8086::hasParallelPipeline() const
+	{
+		return m_pipeline != nullptr;
+	}
+
+	void Je8086::onReceiveSample(int32_t _left, int32_t _right)
+	{
+		m_midiInRateLimiter.processSample();
+		m_sampleBuffer.emplace_back(_left, _right);
+	}
+
+	void Je8086::onLcdDdRamChanged()
+	{
+		SysexRemoteControl::sendSysexLcdDdRam(m_midiOutEvents, lcd);
+	}
+
+	void Je8086::onLcdCgRamChanged()
+	{
+		SysexRemoteControl::sendSysexLcdCgRam(m_midiOutEvents, lcd);
+	}
+
+	bool Je8086::saveSnapshot(const char *path) {
+		FILE *f = fopen(path, "wb");
+		if (!f) return false;
+
+		const char magic[] = "JE86SNAP";
+		uint32_t version = 2;
+		fwrite(magic, 8, 1, f);
+		fwrite(&version, 4, 1, f);
+
+		/* H8S CPU state (16MB memory + registers) */
+		fwrite(emu.memory, sizeof(emu.memory), 1, f);
+		fwrite(emu.regs, sizeof(emu.regs), 1, f);
+		int32_t pc_offset = emu.pcoff(emu.pc);
+		fwrite(&pc_offset, sizeof(pc_offset), 1, f);
+		fwrite(&emu.ccr, sizeof(emu.ccr), 1, f);
+		fwrite(&emu.exr, sizeof(emu.exr), 1, f);
+		fwrite(&emu.cycles, sizeof(emu.cycles), 1, f);
+		fwrite(&emu.pending_irqs, sizeof(emu.pending_irqs), 1, f);
+
+		/* MultiAsic (4 ESP ASICs + cycle tracking) */
+		if (!asics.saveState(f)) { fclose(f); return false; }
+
+		/* v2: memory-mapped peripheral state. These registers live in the
+		 * device objects, NOT in emu.memory — without them a restored
+		 * firmware finds its timers halted and the MIDI SCI disabled and
+		 * never reconfigures them (it believes it already did at boot). */
+		if (!timers.saveState(f)) { fclose(f); return false; }
+		if (!midi.saveState(f))   { fclose(f); return false; }
+		if (!hwregs.saveState(f)) { fclose(f); return false; }
+		if (!faders.saveState(f)) { fclose(f); return false; }
+		if (!ports.saveState(f))  { fclose(f); return false; }
+
+		fclose(f);
+		return true;
+	}
+
+	bool Je8086::loadSnapshot(const char *path) {
+		FILE *f = fopen(path, "rb");
+		if (!f) return false;
+
+		char magic[8];
+		uint32_t version;
+		if (fread(magic, 8, 1, f) != 1 || fread(&version, 4, 1, f) != 1) { fclose(f); return false; }
+		if (memcmp(magic, "JE86SNAP", 8) != 0 || version != 2) { fclose(f); return false; }
+
+		/* H8S CPU state */
+		if (fread(emu.memory, sizeof(emu.memory), 1, f) != 1) { fclose(f); return false; }
+		fread(emu.regs, sizeof(emu.regs), 1, f);
+		int32_t pc_offset;
+		fread(&pc_offset, sizeof(pc_offset), 1, f);
+		emu.pc = emu.makepc(pc_offset);
+		fread(&emu.ccr, sizeof(emu.ccr), 1, f);
+		fread(&emu.exr, sizeof(emu.exr), 1, f);
+		fread(&emu.cycles, sizeof(emu.cycles), 1, f);
+		fread(&emu.pending_irqs, sizeof(emu.pending_irqs), 1, f);
+
+		/* MultiAsic */
+		if (!asics.loadState(f)) { fclose(f); return false; }
+
+		/* v2: memory-mapped peripheral state */
+		if (!timers.loadState(f)) { fclose(f); return false; }
+		if (!midi.loadState(f))   { fclose(f); return false; }
+		if (!hwregs.loadState(f)) { fclose(f); return false; }
+		if (!faders.loadState(f)) { fclose(f); return false; }
+		if (!ports.loadState(f))  { fclose(f); return false; }
+
+		/* Re-bind callbacks and MIDI setup (not serialized) */
+		asics.setPostSample([this](const int32_t _left, const int32_t _right) { onReceiveSample(_left, _right); });
+		m_midiInRateLimiter.setSamplerate(88200.0f);
+		m_midiInRateLimiter.setDefaultRateLimit();
+		m_midiInRateLimiter.setSysexPause(0.021f);
+		m_midiInRateLimiter.setSysexPauseLengthThreshold(100);
+		lcd.setChangeCallback([this] { onLcdDdRamChanged(); });
+		lcd.setCgRamChangeCallback([this] { onLcdCgRamChanged(); });
+
+		/* Sync device cycle counters to restored CPU cycles
+		 * (prevents timers/serial from firing millions of missed interrupts) */
+		timers.syncCycles();
+		midi.syncCycles();
+
+		fclose(f);
+		return true;
+	}
+
+	void Je8086::runfactoryreset(const std::string& _ramDataFilename)
+	{
+		using namespace devices;
+
+		int ctr = 0, ctr2 = 0;
+
+		while (true)
+		{
+			emu.step();
+			timers.tick();
+
+			if (emu.getCycles() > 112776184 && !((++ctr) & 0x3ffff))
+			{
+				switch (ctr2++)
+				{
+					case 1: ports.releaseAll();	break;
+					case 4: ports.press(kSwitch_Exit);	break;
+					case 5: ports.press(kSwitch_7);	break;
+					case 6: ports.press(kSwitch_7,0); ports.press(kSwitch_Exit,0);	break;
+					case 40: ports.press(kSwitch_ValueUp, 0); ports.press(kSwitch_Write); break;
+					case 41: ports.press(kSwitch_Write,0); break;
+					default:
+						if (ctr2 > 7 && ctr2 < 40) ports.press(devices::kSwitch_ValueUp, ctr2 & 1);
+						if (ctr2 > 60)
+						{
+							uint8 ram[0x40000];
+
+							emu.readMemory(ram, 0x200000, 0x40000);
+
+							baseLib::filesystem::writeFile(_ramDataFilename, ram, std::size(ram));
+							printf("Saved repaired RAM to disk. Rebooting.\n");
+							emu.boot();
+							return;
+						}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,2533 @@
+{
+ "name": "JE-8086",
+ "params": [
+  {
+   "key": "bank_index",
+   "name": "BANK",
+   "min": 0,
+   "max": 63,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "preset",
+   "name": "PRESET",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "bank_name",
+   "name": "BANK NAME",
+   "min": 0,
+   "max": 0,
+   "default": 0,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "preset_name",
+   "name": "PRESET NAME",
+   "min": 0,
+   "max": 0,
+   "default": 0,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "bank_prev",
+   "name": "BANK -",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  },
+  {
+   "key": "bank_next",
+   "name": "BANK +",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  },
+  {
+   "key": "preset_prev",
+   "name": "PRESET -",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  },
+  {
+   "key": "preset_next",
+   "name": "PRESET +",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  },
+  {
+   "key": "all_notes_off",
+   "name": "PANIC",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  },
+  {
+   "key": "rom_name",
+   "name": "ROM",
+   "min": 0,
+   "max": 0,
+   "default": 0,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "loading_status",
+   "name": "STATUS",
+   "min": 0,
+   "max": 0,
+   "default": 0,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "engine_stats",
+   "name": "STATS",
+   "min": 0,
+   "max": 0,
+   "default": 0,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "gain",
+   "name": "GAIN %",
+   "min": 10,
+   "max": 400,
+   "default": 100,
+   "display": "int"
+  },
+  {
+   "key": "init_patch",
+   "name": "INIT",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  },
+  {
+   "key": "edit_part",
+   "name": "EDIT PART",
+   "options": [
+    "UPPER",
+    "LOWER",
+    "BOTH"
+   ],
+   "default": "UPPER",
+   "refresh_display": true
+  },
+  {
+   "key": "lfo1_waveform",
+   "name": "LFO1 WAVE",
+   "options": [
+    "TRIANGLE",
+    "SAWTOOTH",
+    "SQUARE",
+    "RANDOM"
+   ],
+   "default": "TRIANGLE"
+  },
+  {
+   "key": "lfo1_rate",
+   "name": "LFO1 RATE",
+   "min": 0,
+   "max": 127,
+   "default": 64,
+   "display": "int"
+  },
+  {
+   "key": "lfo1_fade",
+   "name": "LFO1 FADE",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "lfo2_rate",
+   "name": "LFO2 RATE",
+   "min": 0,
+   "max": 127,
+   "default": 64,
+   "display": "int"
+  },
+  {
+   "key": "lfo2_depth_select",
+   "name": "LFO2 DEST",
+   "options": [
+    "PITCH",
+    "FILTER",
+    "AMP"
+   ],
+   "default": "PITCH"
+  },
+  {
+   "key": "ring_mod",
+   "name": "RING MOD",
+   "options": [
+    "OFF",
+    "ON"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "cross_mod_depth",
+   "name": "CROSS MOD",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "osc_balance",
+   "name": "OSC BALANCE",
+   "min": -64,
+   "max": 63,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "lfo1_env_dest",
+   "name": "LFO1/ENV DEST",
+   "options": [
+    "OSC1+2",
+    "OSC2",
+    "X-MOD"
+   ],
+   "default": "OSC1+2"
+  },
+  {
+   "key": "osc_lfo1_depth",
+   "name": "PITCH LFO1",
+   "min": -64,
+   "max": 63,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "pitch_lfo2_depth",
+   "name": "PITCH LFO2",
+   "min": -64,
+   "max": 63,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "pitch_env_depth",
+   "name": "PITCH ENV",
+   "min": -64,
+   "max": 63,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "pitch_env_attack",
+   "name": "PITCH ATTACK",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "pitch_env_decay",
+   "name": "PITCH DECAY",
+   "min": 0,
+   "max": 127,
+   "default": 64,
+   "display": "int"
+  },
+  {
+   "key": "osc1_waveform",
+   "name": "OSC1 WAVE",
+   "options": [
+    "SUPER SAW",
+    "TRIANGLE MOD",
+    "NOISE",
+    "FEEDBACK OSC",
+    "SQR (PWM)",
+    "SAW",
+    "TRIANGLE"
+   ],
+   "default": "SUPER SAW"
+  },
+  {
+   "key": "osc1_ctrl1",
+   "name": "OSC1 CTRL 1",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "osc1_ctrl2",
+   "name": "OSC1 CTRL 2",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "osc2_waveform",
+   "name": "OSC2 WAVE",
+   "options": [
+    "SQR (PWM)",
+    "SAW",
+    "TRIANGLE",
+    "NOISE"
+   ],
+   "default": "SQR (PWM)"
+  },
+  {
+   "key": "osc2_sync",
+   "name": "OSC2 SYNC",
+   "options": [
+    "OFF",
+    "ON"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "osc2_range",
+   "name": "OSC2 RANGE",
+   "min": -25,
+   "max": 25,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "osc2_fine",
+   "name": "OSC2 FINE",
+   "min": -50,
+   "max": 50,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "osc2_ctrl1",
+   "name": "OSC2 CTRL 1",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "osc2_ctrl2",
+   "name": "OSC2 CTRL 2",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "filter_type",
+   "name": "FILTER TYPE",
+   "options": [
+    "HPF",
+    "BPF",
+    "LPF"
+   ],
+   "default": "LPF"
+  },
+  {
+   "key": "cutoff_slope",
+   "name": "SLOPE",
+   "options": [
+    "-12dB/oct",
+    "-24dB/oct"
+   ],
+   "default": "-24dB/oct"
+  },
+  {
+   "key": "cutoff",
+   "name": "CUTOFF",
+   "min": 0,
+   "max": 127,
+   "default": 127,
+   "display": "int"
+  },
+  {
+   "key": "resonance",
+   "name": "RESONANCE",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "key_follow",
+   "name": "KEY FOLLOW",
+   "min": -64,
+   "max": 63,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "filter_lfo1_depth",
+   "name": "FILTER LFO1",
+   "min": -64,
+   "max": 63,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "filter_lfo2_depth",
+   "name": "FILTER LFO2",
+   "min": -64,
+   "max": 63,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "filter_env_depth",
+   "name": "FILTER ENV",
+   "min": -64,
+   "max": 63,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "filter_attack",
+   "name": "FILTER ATTACK",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "filter_decay",
+   "name": "FILTER DECAY",
+   "min": 0,
+   "max": 127,
+   "default": 64,
+   "display": "int"
+  },
+  {
+   "key": "filter_sustain",
+   "name": "FILTER SUSTAIN",
+   "min": 0,
+   "max": 127,
+   "default": 127,
+   "display": "int"
+  },
+  {
+   "key": "filter_release",
+   "name": "FILTER RELEASE",
+   "min": 0,
+   "max": 127,
+   "default": 64,
+   "display": "int"
+  },
+  {
+   "key": "amp_level",
+   "name": "AMP LEVEL",
+   "min": 0,
+   "max": 127,
+   "default": 127,
+   "display": "int"
+  },
+  {
+   "key": "amp_lfo1_depth",
+   "name": "AMP LFO1/PAN",
+   "min": -64,
+   "max": 63,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "amp_lfo2_depth",
+   "name": "AMP LFO2",
+   "min": -64,
+   "max": 63,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "amp_attack",
+   "name": "AMP ATTACK",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "amp_decay",
+   "name": "AMP DECAY",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "amp_sustain",
+   "name": "AMP SUSTAIN",
+   "min": 0,
+   "max": 127,
+   "default": 127,
+   "display": "int"
+  },
+  {
+   "key": "amp_release",
+   "name": "AMP RELEASE",
+   "min": 0,
+   "max": 127,
+   "default": 40,
+   "display": "int"
+  },
+  {
+   "key": "amp_lfo1_mode",
+   "name": "AMP LFO1 MODE",
+   "options": [
+    "OFF",
+    "AUTO",
+    "MANUAL"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "tone_bass",
+   "name": "TONE BASS",
+   "min": -64,
+   "max": 63,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "tone_treble",
+   "name": "TONE TREBLE",
+   "min": -64,
+   "max": 63,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "chorus_type",
+   "name": "CHORUS TYPE",
+   "options": [
+    "SUPER CHORUS SLW",
+    "SUPER CHORUS MID",
+    "SUPER CHORUS FST",
+    "SUPER CHORUS CLR",
+    "FLANGER SLOW",
+    "FLANGER DEEP",
+    "FLANGER FAST",
+    "DEEP PHASING SLW",
+    "JET PHASING",
+    "TWISTING",
+    "FREEZE PHASE 1",
+    "FREEZE PHASE 2"
+   ],
+   "default": "SUPER CHORUS SLW"
+  },
+  {
+   "key": "chorus_level",
+   "name": "CHORUS LEVEL",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "delay_type",
+   "name": "DELAY TYPE",
+   "options": [
+    "PANNING L->R",
+    "PANNING R->L",
+    "PANNING SHORT",
+    "MONO SHORT",
+    "MONO LONG"
+   ],
+   "default": "PANNING L->R"
+  },
+  {
+   "key": "delay_time",
+   "name": "DELAY TIME",
+   "min": 0,
+   "max": 127,
+   "default": 64,
+   "display": "int"
+  },
+  {
+   "key": "delay_feedback",
+   "name": "DELAY FDBK",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "delay_level",
+   "name": "DELAY LEVEL",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "bend_up",
+   "name": "BEND UP",
+   "min": 0,
+   "max": 24,
+   "default": 2,
+   "display": "int"
+  },
+  {
+   "key": "bend_down",
+   "name": "BEND DOWN",
+   "min": -24,
+   "max": 0,
+   "default": -2,
+   "display": "int"
+  },
+  {
+   "key": "portamento",
+   "name": "PORTAMENTO",
+   "options": [
+    "OFF",
+    "ON"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "portamento_time",
+   "name": "PORTA TIME",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "mono",
+   "name": "MONO",
+   "options": [
+    "OFF",
+    "ON"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "legato",
+   "name": "LEGATO",
+   "options": [
+    "OFF",
+    "ON"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "osc_shift",
+   "name": "OSC SHIFT",
+   "options": [
+    "-2",
+    "-1",
+    "0",
+    "+1",
+    "+2"
+   ],
+   "default": "0"
+  },
+  {
+   "key": "ctl_lfo1_rate",
+   "name": "CTRL LFO1 RATE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_lfo1_fade",
+   "name": "CTRL LFO1 FADE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_lfo2_rate",
+   "name": "CTRL LFO2 RATE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_cross_modulation_depth",
+   "name": "C.CROSS MOD DEPTH",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_oscillator_balance",
+   "name": "C.OSC BALANCE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_pitch_lfo1_depth",
+   "name": "C.PITCH LFO1 DEPTH",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_pitch_lfo2_depth",
+   "name": "C.PITCH LFO2 DEPTH",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_pitch_envelope_depth",
+   "name": "C.PITCH ENV DEPTH",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_pitch_envelope_attack_time",
+   "name": "C.PITCH ENV ATTACK",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_pitch_envelope_decay_time",
+   "name": "C.PITCH ENV DECAY",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_osc1_control1",
+   "name": "C.OSC1 CONTROL 1",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_osc1_control2",
+   "name": "C.OSC1 CONTROL 2",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_osc2_range",
+   "name": "C.OSC2 RANGE",
+   "min": -50,
+   "max": 50,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_osc2_fine_wide",
+   "name": "C.OSC2 FINE WIDE",
+   "min": -100,
+   "max": 100,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_osc2_control1",
+   "name": "C.OSC2 CONTROL 1",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_osc2_control2",
+   "name": "C.OSC2 CONTROL 2",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_cutoff_frequency",
+   "name": "C.CUTOFF FREQ",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_resonance",
+   "name": "C.RESONANCE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_cutoff_freq_key_follow",
+   "name": "C.KEY FOLLOW",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_filter_lfo1_depth",
+   "name": "C.FILTER LFO1",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_filter_lfo2_depth",
+   "name": "C.FILTER LFO2",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_filter_env_depth",
+   "name": "C.FILTER ENV DEPTH",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_filter_env_attack_time",
+   "name": "C.FILTER ENV ATTACK",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_filter_env_decay_time",
+   "name": "C.FILTER ENV DECAY",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_filter_env_sustain_level",
+   "name": "C.FILTER ENV SUSTAIN",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_filter_env_release_time",
+   "name": "C.FILTER ENV RELEASE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_amp_level",
+   "name": "C.AMP LEVEL",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_amp_lfo1_depth",
+   "name": "C.AMP LFO1 DEPTH",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_amp_lfo2_depth",
+   "name": "C.AMP LFO2 DEPTH",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_amp_env_attack_time",
+   "name": "C.AMP ENV ATTACK",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_amp_env_decay_time",
+   "name": "C.AMP ENV DECAY",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_amp_env_sustain_level",
+   "name": "C.AMP ENV SUSTAIN",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_amp_env_release_time",
+   "name": "C.AMP ENV RELEASE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_tone_control_bass",
+   "name": "C.TONE CTRL BASS",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_tone_control_treble",
+   "name": "C.TONE CTRL TREBLE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_multi_effects_level",
+   "name": "C.MULTI-FX LEVEL",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_delay_time",
+   "name": "C.DELAY TIME",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_delay_feedback",
+   "name": "C.DELAY FDBK",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "ctl_delay_level",
+   "name": "C.DELAY LEVEL",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "morph_bend",
+   "name": "MORPH BEND",
+   "options": [
+    "OFF",
+    "ON"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "ctl_portamento_time",
+   "name": "C.PORTA TIME",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "velocity_switch",
+   "name": "VELOCITY",
+   "options": [
+    "OFF",
+    "ON"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "vel_lfo1_rate",
+   "name": "V.LFO1 RATE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_lfo1_fade",
+   "name": "V.LFO1 FADE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_lfo2_rate",
+   "name": "V.LFO2 RATE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_cross_modulation_depth",
+   "name": "V.CROSS MOD DEPTH",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_oscillator_balance",
+   "name": "V.OSC BALANCE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_pitch_lfo1_depth",
+   "name": "V.PITCH LFO1 DEPTH",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_pitch_lfo2_depth",
+   "name": "V.PITCH LFO2 DEPTH",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_pitch_envelope_depth",
+   "name": "V.PITCH ENV DEPTH",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_pitch_envelope_attack_time",
+   "name": "V.PITCH ENV ATTACK",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_pitch_envelope_decay_time",
+   "name": "V.PITCH ENV DECAY",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_osc1_control1",
+   "name": "V.OSC1 CONTROL 1",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_osc1_control2",
+   "name": "V.OSC1 CONTROL 2",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_osc2_range",
+   "name": "V.OSC2 RANGE",
+   "min": -50,
+   "max": 50,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_osc2_fine_wide",
+   "name": "V.OSC2 FINE WIDE",
+   "min": -100,
+   "max": 100,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_osc2_control1",
+   "name": "V.OSC2 CONTROL 1",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_osc2_control2",
+   "name": "V.OSC2 CONTROL 2",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_cutoff_frequency",
+   "name": "V.CUTOFF FREQ",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_resonance",
+   "name": "V.FILTER RESONANCE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_cutoff_freq_key_follow",
+   "name": "V.KEY FOLLOW",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_filter_lfo1_depth",
+   "name": "V.FILTER LFO1",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_filter_lfo2_depth",
+   "name": "V.FILTER LFO2",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_filter_env_depth",
+   "name": "V.FILTER ENV DEPTH",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_filter_env_attack_time",
+   "name": "V.FILTER ENV ATTACK",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_filter_env_decay_time",
+   "name": "V.FILTER ENV DECAY",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_filter_env_sus_level",
+   "name": "V.FILTER ENV SUSTAIN",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_filter_env_release_time",
+   "name": "V.FILTER ENV RELEASE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_amp_level",
+   "name": "V.AMP LEVEL",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_amp_lfo1_depth",
+   "name": "V.AMP LFO1 DEPTH",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_amp_lfo2_depth",
+   "name": "V.AMP LFO2 DEPTH",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_amp_env_attack_time",
+   "name": "V.AMP ENV ATTACK",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_amp_env_decay_time",
+   "name": "V.AMP ENV DECAY",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_amp_env_sustain_level",
+   "name": "V.AMP ENV SUSTAIN",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_amp_env_release_time",
+   "name": "V.AMP ENV RELEASE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_tone_control_bass",
+   "name": "V.TONE CTRL BASS",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_tone_control_treble",
+   "name": "V.TONE CTRL TREBLE",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_multi_effects_level",
+   "name": "V.MULTI-FX LEVEL",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_delay_time",
+   "name": "V.DELAY TIME",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_delay_feedback",
+   "name": "V.DELAY FDBK",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_delay_level",
+   "name": "V.DELAY LEVEL",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "vel_portamento_time",
+   "name": "V.PORTAMENTO",
+   "min": -127,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "active_bender",
+   "name": "BENDER ACTIVE",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "active_velocity",
+   "name": "VEL ACTIVE",
+   "options": [
+    "OFF",
+    "ON"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "active_control",
+   "name": "CTRL ACTIVE",
+   "options": [
+    "OFF",
+    "ON"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "up_midi_ch",
+   "name": "UPPER MIDI CH",
+   "options": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "Off"
+   ],
+   "default": "1"
+  },
+  {
+   "key": "up_transpose",
+   "name": "UPPER TRANSPOSE",
+   "min": -24,
+   "max": 24,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "up_delay_sync",
+   "name": "UPPER DELAY SYNC",
+   "options": [
+    "OFF",
+    "1/16",
+    "1/8 TRIPLET",
+    "1/16 DOTTED",
+    "1/8",
+    "1/4 TRIPLET",
+    "1/8 DOTTED",
+    "1/4",
+    "1/2 TRIPLET",
+    "1/4 DOTTED",
+    "1/2"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "up_lfo1_sync",
+   "name": "UPPER LFO1 SYNC",
+   "options": [
+    "OFF",
+    "1/16",
+    "1/8 TRIPLET",
+    "1/16 DOTTED",
+    "1/8",
+    "1/4 TRIPLET",
+    "1/8 DOTTED",
+    "1/4",
+    "1/2 TRIPLET",
+    "1/4 DOTTED",
+    "1/2",
+    "1/1 TRIPLET",
+    "1/2 DOTTED",
+    "1/1",
+    "2/1 TRIPLET",
+    "1/1 DOTTED",
+    "2/1",
+    "3 MEASURES",
+    "4 MEASURES",
+    "5 MEASURES",
+    "6 MEASURES",
+    "7 MEASURES",
+    "8 MEASURES"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "up_chorus_sync",
+   "name": "UPPER CHORUS SYNC",
+   "options": [
+    "OFF",
+    "1/16",
+    "1/8 TRIPLET",
+    "1/16 DOTTED",
+    "1/8",
+    "1/4 TRIPLET",
+    "1/8 DOTTED",
+    "1/4",
+    "1/2 TRIPLET",
+    "1/4 DOTTED",
+    "1/2",
+    "1/1 TRIPLET",
+    "1/2 DOTTED",
+    "1/1",
+    "2/1 TRIPLET",
+    "1/1 DOTTED",
+    "2/1",
+    "3 MEASURES",
+    "4 MEASURES",
+    "5 MEASURES",
+    "6 MEASURES",
+    "7 MEASURES",
+    "8 MEASURES",
+    "LFO1"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "lo_midi_ch",
+   "name": "LOWER MIDI CH",
+   "options": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "Off"
+   ],
+   "default": "1"
+  },
+  {
+   "key": "lo_transpose",
+   "name": "LOWER TRANSPOSE",
+   "min": -24,
+   "max": 24,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "lo_delay_sync",
+   "name": "LOWER DELAY SYNC",
+   "options": [
+    "OFF",
+    "1/16",
+    "1/8 TRIPLET",
+    "1/16 DOTTED",
+    "1/8",
+    "1/4 TRIPLET",
+    "1/8 DOTTED",
+    "1/4",
+    "1/2 TRIPLET",
+    "1/4 DOTTED",
+    "1/2"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "lo_lfo1_sync",
+   "name": "LOWER LFO1 SYNC",
+   "options": [
+    "OFF",
+    "1/16",
+    "1/8 TRIPLET",
+    "1/16 DOTTED",
+    "1/8",
+    "1/4 TRIPLET",
+    "1/8 DOTTED",
+    "1/4",
+    "1/2 TRIPLET",
+    "1/4 DOTTED",
+    "1/2",
+    "1/1 TRIPLET",
+    "1/2 DOTTED",
+    "1/1",
+    "2/1 TRIPLET",
+    "1/1 DOTTED",
+    "2/1",
+    "3 MEASURES",
+    "4 MEASURES",
+    "5 MEASURES",
+    "6 MEASURES",
+    "7 MEASURES",
+    "8 MEASURES"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "lo_chorus_sync",
+   "name": "LOWER CHORUS SYNC",
+   "options": [
+    "OFF",
+    "1/16",
+    "1/8 TRIPLET",
+    "1/16 DOTTED",
+    "1/8",
+    "1/4 TRIPLET",
+    "1/8 DOTTED",
+    "1/4",
+    "1/2 TRIPLET",
+    "1/4 DOTTED",
+    "1/2",
+    "1/1 TRIPLET",
+    "1/2 DOTTED",
+    "1/1",
+    "2/1 TRIPLET",
+    "1/1 DOTTED",
+    "2/1",
+    "3 MEASURES",
+    "4 MEASURES",
+    "5 MEASURES",
+    "6 MEASURES",
+    "7 MEASURES",
+    "8 MEASURES",
+    "LFO1"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "key_mode",
+   "name": "KEY MODE",
+   "options": [
+    "SINGLE",
+    "DUAL",
+    "SPLIT"
+   ],
+   "default": "SINGLE"
+  },
+  {
+   "key": "split_point",
+   "name": "SPLIT POINT",
+   "min": 0,
+   "max": 127,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "part_detune",
+   "name": "PART DETUNE",
+   "min": -50,
+   "max": 50,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "output_assign",
+   "name": "OUTPUT",
+   "options": [
+    "MIX OUT",
+    "PARALLEL OUT"
+   ],
+   "default": "MIX OUT"
+  },
+  {
+   "key": "arp_dest",
+   "name": "ARP DEST",
+   "options": [
+    "LOWER & UPPER",
+    "LOWER",
+    "UPPER"
+   ],
+   "default": "LOWER & UPPER"
+  },
+  {
+   "key": "voice_assign",
+   "name": "VOICE ASSIGN",
+   "options": [
+    "2-6",
+    "3-5",
+    "4-4",
+    "5-3",
+    "6-2"
+   ],
+   "default": "2-6"
+  },
+  {
+   "key": "arp_switch",
+   "name": "ARPEGGIO",
+   "options": [
+    "OFF",
+    "ON"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "arp_mode",
+   "name": "ARP MODE",
+   "options": [
+    "UP",
+    "DOWN",
+    "UP & DOWN",
+    "RANDOM",
+    "RPS"
+   ],
+   "default": "UP"
+  },
+  {
+   "key": "arp_beat",
+   "name": "ARP BEAT",
+   "options": [
+    "NORMAL 1/4",
+    "NORMAL 1/6",
+    "NORMAL 1/8",
+    "NORMAL 1/12",
+    "NORMAL 1/16",
+    "NORMAL 1/32",
+    "PORTAMENTO A1",
+    "PORTAMENTO A2",
+    "PORTAMENTO A3",
+    "PORTAMENTO A4",
+    "PORTAMENTO A5",
+    "PORTAMENTO A6",
+    "PORTAMENTO A7",
+    "PORTAMENTO A8",
+    "PORTAMENTO A9",
+    "PORTAMENTO A10",
+    "PORTAMENTO A11",
+    "PORTAMENTO B1",
+    "PORTAMENTO B2",
+    "PORTAMENTO B3",
+    "PORTAMENTO B4",
+    "PORTAMENTO B5",
+    "PORTAMENTO B6",
+    "PORTAMENTO B7",
+    "PORTAMENTO B8",
+    "PORTAMENTO B9",
+    "PORTAMENTO B10",
+    "PORTAMENTO B11",
+    "PORTAMENTO B12",
+    "PORTAMENTO B13",
+    "PORTAMENTO B14",
+    "PORTAMENTO B15",
+    "SEQUENCE A1",
+    "SEQUENCE A2",
+    "SEQUENCE A3",
+    "SEQUENCE A4",
+    "SEQUENCE A5",
+    "SEQUENCE A6",
+    "SEQUENCE A7",
+    "SEQUENCE A8",
+    "SEQUENCE A9",
+    "SEQUENCE A10",
+    "SEQUENCE A11",
+    "SEQUENCE A12",
+    "SEQUENCE A13",
+    "SEQUENCE A14",
+    "SEQUENCE A15",
+    "SEQUENCE A16",
+    "SEQUENCE A17",
+    "SEQUENCE B1",
+    "SEQUENCE B2",
+    "SEQUENCE B3",
+    "SEQUENCE B4",
+    "SEQUENCE B5",
+    "SEQUENCE C1",
+    "SEQUENCE C2",
+    "SEQUENCE D1",
+    "SEQUENCE D2",
+    "SEQUENCE D3",
+    "SEQUENCE D4",
+    "SEQUENCE D5",
+    "SEQUENCE D6",
+    "SEQUENCE D7",
+    "SEQUENCE D8",
+    "ECHO 1",
+    "ECHO 2",
+    "ECHO 3",
+    "MUTE 1",
+    "MUTE 2",
+    "MUTE 3",
+    "MUTE 4",
+    "MUTE 5",
+    "MUTE 6",
+    "MUTE 7",
+    "MUTE 8",
+    "MUTE 9",
+    "MUTE 10",
+    "MUTE 11",
+    "MUTE 12",
+    "MUTE 13",
+    "MUTE 14",
+    "MUTE 15",
+    "MUTE 16",
+    "STRUMMING 1",
+    "STRUMMING 2",
+    "STRUMMING 3",
+    "STRUMMING 4",
+    "STRUMMING 5",
+    "STRUMMING 6",
+    "STRUMMING 7"
+   ],
+   "default": "NORMAL 1/4"
+  },
+  {
+   "key": "arp_range",
+   "name": "ARP RANGE",
+   "options": [
+    "1 OCTAVE",
+    "2 OCTAVES",
+    "3 OCTAVES",
+    "4 OCTAVES"
+   ],
+   "default": "1 OCTAVE"
+  },
+  {
+   "key": "arp_hold",
+   "name": "ARP HOLD",
+   "options": [
+    "OFF",
+    "ON"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "trigger_switch",
+   "name": "IND. TRIGGER",
+   "options": [
+    "OFF",
+    "ON"
+   ],
+   "default": "OFF"
+  },
+  {
+   "key": "trigger_dest",
+   "name": "TRIGGER DEST",
+   "options": [
+    "FILTER",
+    "AMP",
+    "FILTER & AMP"
+   ],
+   "default": "FILTER"
+  },
+  {
+   "key": "trigger_ch",
+   "name": "TRIGGER CH",
+   "min": 1,
+   "max": 16,
+   "default": 1,
+   "display": "int"
+  },
+  {
+   "key": "trigger_note",
+   "name": "TRIGGER NOTE",
+   "min": 0,
+   "max": 128,
+   "default": 0,
+   "display": "int"
+  },
+  {
+   "key": "tempo",
+   "name": "TEMPO",
+   "min": 20,
+   "max": 250,
+   "default": 120,
+   "display": "int"
+  },
+  {
+   "key": "bank_slot_1",
+   "name": "BANK 1",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "bank_slot_2",
+   "name": "BANK 2",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "bank_slot_3",
+   "name": "BANK 3",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "bank_slot_4",
+   "name": "BANK 4",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "bank_slot_5",
+   "name": "BANK 5",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "bank_slot_6",
+   "name": "BANK 6",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "bank_slot_7",
+   "name": "BANK 7",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "bank_slot_8",
+   "name": "BANK 8",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "bank_page_text",
+   "name": "BANK PAGE",
+   "min": 0,
+   "max": 0,
+   "default": 0,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "bank_page_prev",
+   "name": "BANK PAGE -",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  },
+  {
+   "key": "bank_page_next",
+   "name": "BANK PAGE +",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  },
+  {
+   "key": "patch_slot_1",
+   "name": "PATCH 1",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_2",
+   "name": "PATCH 2",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_3",
+   "name": "PATCH 3",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_4",
+   "name": "PATCH 4",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_5",
+   "name": "PATCH 5",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_6",
+   "name": "PATCH 6",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_7",
+   "name": "PATCH 7",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_8",
+   "name": "PATCH 8",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_9",
+   "name": "PATCH 9",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_10",
+   "name": "PATCH 10",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_11",
+   "name": "PATCH 11",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_12",
+   "name": "PATCH 12",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_13",
+   "name": "PATCH 13",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_14",
+   "name": "PATCH 14",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_15",
+   "name": "PATCH 15",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_16",
+   "name": "PATCH 16",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_17",
+   "name": "PATCH 17",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_18",
+   "name": "PATCH 18",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_19",
+   "name": "PATCH 19",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_20",
+   "name": "PATCH 20",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_21",
+   "name": "PATCH 21",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_22",
+   "name": "PATCH 22",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_23",
+   "name": "PATCH 23",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_24",
+   "name": "PATCH 24",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_25",
+   "name": "PATCH 25",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_26",
+   "name": "PATCH 26",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_27",
+   "name": "PATCH 27",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_28",
+   "name": "PATCH 28",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_29",
+   "name": "PATCH 29",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_30",
+   "name": "PATCH 30",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_31",
+   "name": "PATCH 31",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_slot_32",
+   "name": "PATCH 32",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_page_text",
+   "name": "PAGE",
+   "min": 0,
+   "max": 0,
+   "default": 0,
+   "display": "string",
+   "poll": true
+  },
+  {
+   "key": "patch_page_prev",
+   "name": "PAGE -",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  },
+  {
+   "key": "patch_page_next",
+   "name": "PAGE +",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  }
+ ],
+ "sections": [
+  {
+   "label": "Browse",
+   "keys": [
+    "bank_index",
+    "preset",
+    "bank_name",
+    "preset_name",
+    "bank_prev",
+    "bank_next",
+    "preset_prev",
+    "preset_next",
+    "all_notes_off"
+   ]
+  },
+  {
+   "label": "Banks",
+   "keys": [
+    "bank_slot_1",
+    "bank_slot_2",
+    "bank_slot_3",
+    "bank_slot_4",
+    "bank_slot_5",
+    "bank_slot_6",
+    "bank_slot_7",
+    "bank_slot_8",
+    "bank_page_text",
+    "bank_page_prev",
+    "bank_page_next",
+    "patch_slot_1",
+    "patch_slot_2",
+    "patch_slot_3",
+    "patch_slot_4",
+    "patch_slot_5",
+    "patch_slot_6",
+    "patch_slot_7",
+    "patch_slot_8",
+    "patch_slot_9",
+    "patch_slot_10",
+    "patch_slot_11",
+    "patch_slot_12",
+    "patch_slot_13",
+    "patch_slot_14",
+    "patch_slot_15",
+    "patch_slot_16",
+    "patch_slot_17",
+    "patch_slot_18",
+    "patch_slot_19",
+    "patch_slot_20",
+    "patch_slot_21",
+    "patch_slot_22",
+    "patch_slot_23",
+    "patch_slot_24",
+    "patch_slot_25",
+    "patch_slot_26",
+    "patch_slot_27",
+    "patch_slot_28",
+    "patch_slot_29",
+    "patch_slot_30",
+    "patch_slot_31",
+    "patch_slot_32",
+    "patch_page_text",
+    "patch_page_prev",
+    "patch_page_next"
+   ]
+  },
+  {
+   "label": "System",
+   "keys": [
+    "rom_name",
+    "loading_status",
+    "engine_stats",
+    "gain",
+    "init_patch",
+    "edit_part"
+   ]
+  },
+  {
+   "label": "Osc",
+   "keys": [
+    "ring_mod",
+    "cross_mod_depth",
+    "osc_balance",
+    "osc_lfo1_depth",
+    "pitch_lfo2_depth",
+    "pitch_env_depth",
+    "pitch_env_attack",
+    "pitch_env_decay",
+    "osc1_waveform",
+    "osc1_ctrl1",
+    "osc1_ctrl2",
+    "osc2_waveform",
+    "osc2_sync",
+    "osc2_range",
+    "osc2_fine",
+    "osc2_ctrl1",
+    "osc2_ctrl2",
+    "osc_shift"
+   ]
+  },
+  {
+   "label": "Filter",
+   "keys": [
+    "filter_type",
+    "cutoff_slope",
+    "cutoff",
+    "resonance",
+    "key_follow",
+    "filter_lfo1_depth",
+    "filter_lfo2_depth",
+    "filter_env_depth",
+    "filter_attack",
+    "filter_decay",
+    "filter_sustain",
+    "filter_release"
+   ]
+  },
+  {
+   "label": "Amp",
+   "keys": [
+    "amp_level",
+    "amp_lfo1_depth",
+    "amp_lfo2_depth",
+    "amp_attack",
+    "amp_decay",
+    "amp_sustain",
+    "amp_release",
+    "amp_lfo1_mode"
+   ]
+  },
+  {
+   "label": "LFO",
+   "keys": [
+    "lfo1_waveform",
+    "lfo1_rate",
+    "lfo1_fade",
+    "lfo2_rate",
+    "lfo2_depth_select",
+    "lfo1_env_dest"
+   ]
+  },
+  {
+   "label": "Effects",
+   "keys": [
+    "tone_bass",
+    "tone_treble",
+    "chorus_type",
+    "chorus_level",
+    "delay_type",
+    "delay_time",
+    "delay_feedback",
+    "delay_level"
+   ]
+  },
+  {
+   "label": "Common",
+   "keys": [
+    "bend_up",
+    "bend_down",
+    "portamento",
+    "portamento_time",
+    "mono",
+    "legato",
+    "morph_bend",
+    "velocity_switch",
+    "key_mode",
+    "split_point",
+    "part_detune",
+    "output_assign",
+    "voice_assign"
+   ]
+  },
+  {
+   "label": "Arp",
+   "keys": [
+    "arp_dest",
+    "arp_switch",
+    "arp_mode",
+    "arp_beat",
+    "arp_range",
+    "arp_hold",
+    "trigger_switch",
+    "trigger_dest",
+    "trigger_ch",
+    "trigger_note",
+    "tempo"
+   ]
+  },
+  {
+   "label": "Parts",
+   "keys": [
+    "up_midi_ch",
+    "up_transpose",
+    "up_delay_sync",
+    "up_lfo1_sync",
+    "up_chorus_sync",
+    "lo_midi_ch",
+    "lo_transpose",
+    "lo_delay_sync",
+    "lo_lfo1_sync",
+    "lo_chorus_sync"
+   ]
+  },
+  {
+   "label": "Control",
+   "keys": [
+    "ctl_lfo1_rate",
+    "ctl_lfo1_fade",
+    "ctl_lfo2_rate",
+    "ctl_cross_modulation_depth",
+    "ctl_oscillator_balance",
+    "ctl_pitch_lfo1_depth",
+    "ctl_pitch_lfo2_depth",
+    "ctl_pitch_envelope_depth",
+    "ctl_pitch_envelope_attack_time",
+    "ctl_pitch_envelope_decay_time",
+    "ctl_osc1_control1",
+    "ctl_osc1_control2",
+    "ctl_osc2_range",
+    "ctl_osc2_fine_wide",
+    "ctl_osc2_control1",
+    "ctl_osc2_control2",
+    "ctl_cutoff_frequency",
+    "ctl_resonance",
+    "ctl_cutoff_freq_key_follow",
+    "ctl_filter_lfo1_depth",
+    "ctl_filter_lfo2_depth",
+    "ctl_filter_env_depth",
+    "ctl_filter_env_attack_time",
+    "ctl_filter_env_decay_time",
+    "ctl_filter_env_sustain_level",
+    "ctl_filter_env_release_time",
+    "ctl_amp_level",
+    "ctl_amp_lfo1_depth",
+    "ctl_amp_lfo2_depth",
+    "ctl_amp_env_attack_time",
+    "ctl_amp_env_decay_time",
+    "ctl_amp_env_sustain_level",
+    "ctl_amp_env_release_time",
+    "ctl_tone_control_bass",
+    "ctl_tone_control_treble",
+    "ctl_multi_effects_level",
+    "ctl_delay_time",
+    "ctl_delay_feedback",
+    "ctl_delay_level",
+    "ctl_portamento_time"
+   ]
+  },
+  {
+   "label": "Velocity",
+   "keys": [
+    "vel_lfo1_rate",
+    "vel_lfo1_fade",
+    "vel_lfo2_rate",
+    "vel_cross_modulation_depth",
+    "vel_oscillator_balance",
+    "vel_pitch_lfo1_depth",
+    "vel_pitch_lfo2_depth",
+    "vel_pitch_envelope_depth",
+    "vel_pitch_envelope_attack_time",
+    "vel_pitch_envelope_decay_time",
+    "vel_osc1_control1",
+    "vel_osc1_control2",
+    "vel_osc2_range",
+    "vel_osc2_fine_wide",
+    "vel_osc2_control1",
+    "vel_osc2_control2",
+    "vel_cutoff_frequency",
+    "vel_resonance",
+    "vel_cutoff_freq_key_follow",
+    "vel_filter_lfo1_depth",
+    "vel_filter_lfo2_depth",
+    "vel_filter_env_depth",
+    "vel_filter_env_attack_time",
+    "vel_filter_env_decay_time",
+    "vel_filter_env_sus_level",
+    "vel_filter_env_release_time",
+    "vel_amp_level",
+    "vel_amp_lfo1_depth",
+    "vel_amp_lfo2_depth",
+    "vel_amp_env_attack_time",
+    "vel_amp_env_decay_time",
+    "vel_amp_env_sustain_level",
+    "vel_amp_env_release_time",
+    "vel_tone_control_bass",
+    "vel_tone_control_treble",
+    "vel_multi_effects_level",
+    "vel_delay_time",
+    "vel_delay_feedback",
+    "vel_delay_level",
+    "vel_portamento_time",
+    "active_bender",
+    "active_velocity",
+    "active_control"
+   ]
+  }
+ ]
+}
