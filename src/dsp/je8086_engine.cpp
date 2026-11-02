@@ -140,6 +140,13 @@ struct Inst {
 
     /* UI side */
     std::atomic<int> bank{0}, preset{0}, page{0}, bank_page{0}, gain{100}, part{0};
+    std::atomic<uint32_t> load_gen{0};                      // bumped by every sound load: a favourite stays "current" until the next one
+    /* favourites (MPC's native program list, vst.json "programs": favourite): whole temp performances, from any bank, in <dir>/favourites.dat */
+    std::mutex fm;
+    int fav_count = 0, fav_current = -1;
+    uint32_t fav_stamp = 0;
+    char fav_name[64][24] = {};
+    Image fav_img[64];
     std::atomic<uint32_t> rev{1};
     std::mutex sm;              // everything below
     char status[96] = "Starting...";
@@ -528,11 +535,14 @@ const je_opts_t *find_opts(const char *key) {
 
 int clampi(int v, int lo, int hi) { return v < lo ? lo : v > hi ? hi : v; }
 
+void fav_load(Inst *in);
+
 void *eng_create(const char *dir) {
     if (!g_log) g_log = fopen(getenv("JE_LOG") ? getenv("JE_LOG") : "/tmp/je8086.log", "a");
     Inst *in = new Inst();
     in->dir = dir ? dir : "";
     if (const char *t = getenv("JE_DSP_THREADS")) in->threads = clampi(atoi(t), 1, 4);
+    fav_load(in);
     in->th = std::thread(emu_main, in);
     return in;
 }
@@ -565,6 +575,7 @@ void select_sound(Inst *in, int bank, int prog) {
     c.b = prog;
     c.c = in->part.load();
     in->push(std::move(c));
+    in->load_gen++;
     in->bump();
 }
 
@@ -633,6 +644,87 @@ int read_param(Inst *in, const jp_param_t *q, int *value) {
     return 0;
 }
 
+/* ---- favourites: "JEFAV1\n\0", then records of 24 name bytes + the 528-byte temp performance */
+constexpr int kFavSlots = 64;
+const char kFavMagic[8] = {'J', 'E', 'F', 'A', 'V', '1', '\n', 0};
+std::string fav_path(Inst *in) { return in->dir + "/favourites.dat"; }
+
+void fav_load(Inst *in) {
+    std::lock_guard<std::mutex> l(in->fm);
+    in->fav_count = 0;
+    FILE *f = fopen(fav_path(in).c_str(), "rb");
+    if (!f) return;
+    char magic[8];
+    if (fread(magic, 1, 8, f) == 8 && !memcmp(magic, kFavMagic, 8))
+        while (in->fav_count < kFavSlots && fread(in->fav_name[in->fav_count], 1, 24, f) == 24 &&
+               fread(&in->fav_img[in->fav_count], 1, sizeof(Image), f) == sizeof(Image)) {
+            in->fav_name[in->fav_count][23] = 0;
+            in->fav_count++;
+        }
+    fclose(f);
+    xlog("[fav] %d loaded", in->fav_count);
+}
+
+bool fav_write(Inst *in) {            // under fm
+    const std::string path = fav_path(in), tmp = path + ".tmp";
+    FILE *f = fopen(tmp.c_str(), "wb");
+    if (!f) return false;
+    bool ok = fwrite(kFavMagic, 1, 8, f) == 8;
+    for (int i = 0; ok && i < in->fav_count; i++)
+        ok = fwrite(in->fav_name[i], 1, 24, f) == 24 && fwrite(&in->fav_img[i], 1, sizeof(Image), f) == sizeof(Image);
+    ok = (fclose(f) == 0) && ok;
+    return ok && rename(tmp.c_str(), path.c_str()) == 0;
+}
+
+/* the live sound, knob changes included: a performance by its bank name, a patch by its own name */
+void fav_save(Inst *in) {
+    Image im;
+    std::string nm;
+    {
+        std::lock_guard<std::mutex> l(in->sm);
+        if ((in->img_valid & IMG_ALL) != IMG_ALL) return;
+        im = in->img;
+        const int b = in->bank, p = in->preset;
+        const bool perf = b < (int)in->banks.size() && in->banks[b].is_perf;
+        nm = perf && p < (int)in->banks[b].presets.size() ? in->banks[b].presets[p].name : in->cur_name;
+    }
+    std::lock_guard<std::mutex> l(in->fm);
+    if (in->fav_count >= kFavSlots) return;
+    for (int i = 0; i < in->fav_count; i++) if (!memcmp(&in->fav_img[i], &im, sizeof im)) return;      // already there
+    const int i = in->fav_count;
+    snprintf(in->fav_name[i], 24, "%s", nm.empty() ? "Favourite" : nm.c_str());
+    in->fav_img[i] = im;
+    in->fav_count++;
+    if (!fav_write(in)) in->fav_count--;
+    else { in->fav_current = i; in->fav_stamp = in->load_gen; xlog("[fav] saved %d \"%s\"", i + 1, in->fav_name[i]); }
+}
+
+void fav_delete(Inst *in) {           // only the favourite that is the current sound
+    std::lock_guard<std::mutex> l(in->fm);
+    const int d = in->fav_current;
+    if (d < 0 || d >= in->fav_count || in->fav_stamp != in->load_gen) return;
+    for (int i = d; i + 1 < in->fav_count; i++) { memcpy(in->fav_name[i], in->fav_name[i + 1], 24); in->fav_img[i] = in->fav_img[i + 1]; }
+    in->fav_count--;
+    fav_write(in);
+    in->fav_current = -1;
+}
+
+void fav_pick(Inst *in, int idx) {
+    std::lock_guard<std::mutex> l(in->fm);
+    if (idx < 0 || idx >= kFavSlots) return;
+    if (idx < in->fav_count) {
+        { std::lock_guard<std::mutex> l2(in->sm); in->img = in->fav_img[idx]; in->cur_name = in->fav_name[idx]; }
+        Cmd c;
+        c.type = C_LOADIMG;
+        c.sx = image_dt1s(in->fav_img[idx]);
+        in->push(std::move(c));
+        in->load_gen++;
+    }
+    in->fav_current = idx;            // an empty slot shows as picked, nothing loads
+    in->fav_stamp = in->load_gen;
+    in->bump();
+}
+
 void restore_state(Inst *in, const char *s) {
     auto num = [&](const char *k, int def) {
         const char *q = strstr(s, k);
@@ -656,6 +748,7 @@ void restore_state(Inst *in, const char *s) {
             c.type = C_LOADIMG;
             c.sx = image_dt1s(im);
             in->push(std::move(c));
+            in->load_gen++;
             in->bump();
             return;
         }
@@ -702,6 +795,9 @@ void eng_set(void *p, const char *key, const char *val) {
         return;
     }
     if (!strcmp(key, "all_notes_off")) { if (press) { Cmd c; c.type = C_PANIC; in->push(std::move(c)); } return; }
+    if (!strcmp(key, "fav_save")) { if (press) { fav_save(in); in->bump(); } return; }
+    if (!strcmp(key, "fav_delete")) { if (press) { fav_delete(in); in->bump(); } return; }
+    if (!strcmp(key, "favourite")) { fav_pick(in, atoi(val)); return; }
     if (!strcmp(key, "init_patch")) { if (press) select_sound(in, in->bank, in->preset); return; }      // reload the stored preset
     if (!strcmp(key, "gain")) { in->gain = clampi(atoi(val), 10, 400); return; }
     if (!strcmp(key, "edit_part")) {
@@ -772,6 +868,17 @@ int eng_get(void *p, const char *key, char *buf, int n) {
     if (!strcmp(key, "engine_stats")) return put(buf, n, "DROPOUTS %u   CPU %d%%   %d THREADS", in->underruns.load(), in->emu_cpu.load(), in->threads.load());
     if (!strcmp(key, "gain")) return put(buf, n, "%d", in->gain.load());
     if (!strcmp(key, "edit_part")) return put(buf, n, "%d", clampi(in->part, 0, 2));
+    if (!strcmp(key, "favourite")) {      // the picked favourite while it is the sound, else the first empty slot (so picking 1 is never "already current")
+        std::lock_guard<std::mutex> l(in->fm);
+        const bool cur = in->fav_current >= 0 && in->fav_stamp == in->load_gen;
+        return put(buf, n, "%d", cur ? in->fav_current : std::min(in->fav_count, kFavSlots - 1));
+    }
+    if (!strncmp(key, "favourite:", 10)) {
+        std::lock_guard<std::mutex> l(in->fm);
+        const int i = atoi(key + 10);
+        return put(buf, n, "%s", i >= 0 && i < in->fav_count ? in->fav_name[i] : "-");
+    }
+    if (!strcmp(key, "fav_text")) { std::lock_guard<std::mutex> l(in->fm); return put(buf, n, "FAVOURITES %d / %d", in->fav_count, kFavSlots); }
     if (!strcmp(key, "display_rev")) return put(buf, n, "%u", in->rev.load());
     if (!strcmp(key, "state")) {
         std::lock_guard<std::mutex> l(in->sm);

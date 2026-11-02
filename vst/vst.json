@@ -7,6 +7,7 @@
     "aarch64"
   ],
   "so": "je8086.so",
+  "programs": {"param": "favourite"},
   "params": "params.json",
   "art": "html",
   "defines": {

@@ -2231,6 +2231,39 @@
    "max": 1,
    "default": 0,
    "momentary": true
+  },
+  {
+   "key": "favourite",
+   "name": "FAVOURITE",
+   "min": 0,
+   "max": 63,
+   "default": 63,
+   "display": "int"
+  },
+  {
+   "key": "fav_save",
+   "name": "SAVE FAV",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  },
+  {
+   "key": "fav_delete",
+   "name": "DEL FAV",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  },
+  {
+   "key": "fav_text",
+   "name": "FAVOURITES",
+   "min": 0,
+   "max": 0,
+   "default": 0,
+   "display": "string",
+   "poll": true
   }
  ],
  "sections": [
@@ -2296,7 +2329,11 @@
     "patch_slot_32",
     "patch_page_text",
     "patch_page_prev",
-    "patch_page_next"
+    "patch_page_next",
+    "favourite",
+    "fav_save",
+    "fav_delete",
+    "fav_text"
    ]
   },
   {

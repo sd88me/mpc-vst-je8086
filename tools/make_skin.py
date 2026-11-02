@@ -17,7 +17,7 @@ WHITE = (236, 236, 236)
 DIM = (150, 156, 170)
 PANEL = (6, 6, 8)
 PANEL_EDGE = (34, 40, 54)
-KNOB = 70
+KNOB = 84
 
 PARAMS = {p["key"]: p for p in json.load(open(os.path.join(OUT, "params.json")))["params"]}
 _f = {}
@@ -46,7 +46,7 @@ class Page:
         if title:
             self.d.text((x + w // 2, y + 6), title, font=F(21, TITLE), fill=ORANGE, anchor="ma")
 
-    def label(self, cx, y, s, size=14, color=WHITE):
+    def label(self, cx, y, s, size=17, color=WHITE):
         self.d.text((cx, y), s.upper(), font=F(size), fill=color, anchor="ma")
 
     def ctl(self, cx, cy, key, label, w=None):
@@ -54,17 +54,17 @@ class Page:
         p = PARAMS[key]
         opts = p.get("options")
         if opts and len(opts) == 2:
-            self.label(cx, cy - 40, label)
+            self.label(cx, cy - 44, label)
             self.widgets.append('toggle cx=%d cy=%d label="" key=%s ns=0' % (cx, cy + Y86, key))
         elif opts:
             w = w or 130
-            self.label(cx, cy - 40, label)
+            self.label(cx, cy - 46, label)
             n = len(opts)
             cw = " cw=%d" % (118 if n > 40 else 0) if n > 40 else ""      # a long list (arp patterns) opens in narrower columns
             self.widgets.append('popup cx=%d cy=%d w=%d h=34 label="" key=%s%s' % (cx, cy + Y86 - 2, w, key, cw))
         else:
-            self.label(cx, cy - KNOB // 2 - 20, label)
-            self.widgets.append('knob cx=%d cy=%d r=%d label="" key=%s ns=0 vs=20 vy=12 bw=%d' % (cx, cy + Y86, KNOB // 2 - 8, key, KNOB + 22))
+            self.label(cx, cy - KNOB // 2 - 26, label)
+            self.widgets.append('knob cx=%d cy=%d r=%d label="" key=%s ns=0 vs=22 vy=14 bw=%d' % (cx, cy + Y86, KNOB // 2 - 8, key, KNOB + 26))
 
     def row(self, x0, x1, y, items):
         cw = (x1 - x0) / len(items)
@@ -73,7 +73,7 @@ class Page:
                 self.ctl(int(x0 + cw * (i + 0.5)), y, it[0], it[1], it[2] if len(it) > 2 else min(int(cw) - 10, 170))
 
     def readout(self, cx, cy, key, label, w):
-        self.label(cx, cy - 38, label)
+        self.label(cx, cy - 44, label)
         self.widgets.append('readout cx=%d cy=%d w=%d h=34 label="" key=%s' % (cx, cy + Y86, w, key))
 
     def button(self, cx, cy, key, label):
@@ -102,7 +102,7 @@ theme_accent_hi=ff8a3c
 theme_knob_face=d8d8d8
 theme_knob_ring=1a1a1a
 theme_knob_dot=ff6a14
-theme_lcd=1a0d04
+theme_lcd=2a2b2d
 theme_box=111216
 theme_seg_active=ff6a14
 theme_seg_inactive=1c1e24
@@ -110,12 +110,13 @@ theme_seg_active_tx=000000
 theme_btn_bg=1c1e24
 theme_btn_text=ff6a14
 theme_btn_text_plain=ececec
-theme_display_bg=140a04
-theme_display_cell=1e1008
-theme_display_off=2a1608
+theme_display_bg=2a2b2d
+theme_display_cell=303234
+theme_display_off=232425
 theme_display_bezel=060608
-theme_display_ink=ff7a24
-theme_tile_on=ff6a14
+theme_display_ink=00fe00
+theme_tile_on=5a2508
+label_scale=1.25
 style=td3
 art_css=skin.css
 knob_strip=images/knob_je.png
@@ -134,21 +135,19 @@ def header(p):
 
 # ---------------------------------------------------------------- MAIN
 p = Page("MAIN", ["cutoff", "resonance", "filter_env_depth", "amp_level", "lfo1_rate", "osc1_ctrl1", "osc1_ctrl2", "osc_balance",
-                  "tone_bass", "tone_treble", "chorus_level", "delay_level", "gain", "part_detune", "portamento_time", "tempo"])
+                  "split_point", "part_detune", "tempo", "gain"])
 header(p)
-p.panel(12, 120, 620, 238, "PERFORMANCE")
-p.row(12, 632, 210, [("edit_part", "Edit Part", 120), ("key_mode", "Key Mode", 120), ("voice_assign", "Voices", 100), ("output_assign", "Output", 130)])
-p.row(12, 632, 314, [("split_point", "Split"), ("part_detune", "Detune"), ("tempo", "Tempo"), ("gain", "Gain %")])
-p.panel(648, 120, 620, 238, "ENGINE")
-p.readout(958, 204, "loading_status", "Status", 580)
-p.readout(958, 270, "engine_stats", "Stats", 580)
-p.button(810, 326, "all_notes_off", "PANIC")
-p.button(1106, 326, "init_patch", "RELOAD PATCH")
-p.panel(12, 368, 1256, 252, "QUICK EDIT")
-p.row(12, 1268, 454, [("cutoff", "Cutoff"), ("resonance", "Resonance"), ("filter_env_depth", "Env Depth"), ("amp_level", "Level"), ("lfo1_rate", "LFO1 Rate"),
+p.panel(12, 120, 620, 262, "PERFORMANCE")
+p.row(12, 632, 206, [("edit_part", "Edit Part", 120), ("key_mode", "Key Mode", 120), ("voice_assign", "Voices", 100), ("output_assign", "Output", 130)])
+p.row(12, 632, 300, [("split_point", "Split"), ("part_detune", "Detune"), ("tempo", "Tempo"), ("gain", "Gain %")])
+p.panel(648, 120, 620, 262, "ENGINE")
+p.readout(958, 214, "loading_status", "Status", 580)
+p.readout(958, 290, "engine_stats", "Stats", 580)
+p.button(810, 346, "all_notes_off", "PANIC")
+p.button(1106, 346, "init_patch", "RELOAD PATCH")
+p.panel(12, 394, 1256, 226, "QUICK EDIT")
+p.row(12, 1268, 520, [("cutoff", "Cutoff"), ("resonance", "Resonance"), ("filter_env_depth", "Env Depth"), ("amp_level", "Level"), ("lfo1_rate", "LFO1 Rate"),
                       ("osc1_ctrl1", "Ctrl 1"), ("osc1_ctrl2", "Ctrl 2"), ("osc_balance", "Balance")])
-p.row(12, 1268, 550, [("tone_bass", "Bass"), ("tone_treble", "Treble"), ("chorus_level", "Chorus"), ("delay_level", "Delay"), ("portamento_time", "Porta"),
-                      ("mono", "Mono"), ("legato", "Legato"), ("portamento", "Porta On")])
 p.done()
 
 # ---------------------------------------------------------------- BANKS
@@ -158,7 +157,9 @@ p.panel(290, 8, 982, 612, "PATCHES")
 p.widgets.append('stepper w=230 h=40 cx=142 cy=%d label="" key=bank_index get=bank_name prev=bank_prev next=bank_next style=dotmatrix persistent=1' % (66 + Y86))
 p.widgets.append('list x=22 y=%d w=240 h=420 cols=1 rows=8 gap=6 th=46 key=bank_slot' % (100 + Y86))
 p.widgets.append('stepper w=230 h=40 cx=142 cy=%d label="" key=bank_page_text get=bank_page_text prev=bank_page_prev next=bank_page_next style=dotmatrix' % (580 + Y86))
-p.widgets.append('stepper w=560 h=40 cx=600 cy=%d label="" key=preset get=preset_name prev=preset_prev next=preset_next style=dotmatrix persistent=1' % (66 + Y86))
+p.widgets.append('stepper w=420 h=40 cx=528 cy=%d label="" key=preset get=preset_name prev=preset_prev next=preset_next style=dotmatrix persistent=1' % (66 + Y86))
+p.widgets.append('button cx=800 cy=%d w=92 h=40 label="+FAV" key=fav_save' % (66 + Y86))
+p.widgets.append('button cx=900 cy=%d w=92 h=40 label="-FAV" key=fav_delete' % (66 + Y86))
 p.widgets.append('stepper w=280 h=40 cx=1110 cy=%d label="" key=patch_page_text get=patch_page_text prev=patch_page_prev next=patch_page_next style=dotmatrix' % (66 + Y86))
 p.widgets.append('list x=304 y=%d w=954 h=500 cols=4 rows=8 gap=6 th=56 key=patch_slot order=cols' % (100 + Y86))
 p.done()
@@ -168,16 +169,16 @@ p = Page("OSC", ["lfo1_rate", "lfo1_fade", "osc1_ctrl1", "osc1_ctrl2", "osc2_ran
                  "osc_balance", "cross_mod_depth", "osc_lfo1_depth", "-", "pitch_env_depth", "pitch_env_attack", "pitch_env_decay", "-"])
 p.panel(8, 8, 300, 300, "LFO 1")
 p.ctl(158, 90, "lfo1_waveform", "Waveform", 200)
-p.row(8, 308, 236, [("lfo1_rate", "Rate"), ("lfo1_fade", "Fade")])
+p.row(8, 308, 228, [("lfo1_rate", "Rate"), ("lfo1_fade", "Fade")])
 p.panel(320, 8, 330, 300, "OSC 1")
 p.ctl(485, 90, "osc1_waveform", "Waveform", 230)
-p.row(320, 650, 236, [("osc1_ctrl1", "Ctrl 1"), ("osc1_ctrl2", "Ctrl 2")])
+p.row(320, 650, 228, [("osc1_ctrl1", "Ctrl 1"), ("osc1_ctrl2", "Ctrl 2")])
 p.panel(662, 8, 606, 300, "OSC 2")
 p.row(662, 1268, 90, [("osc2_waveform", "Waveform", 150), ("osc2_sync", "Sync"), ("ring_mod", "Ring")])
-p.row(662, 1268, 236, [("osc2_range", "Range"), ("osc2_fine", "Fine"), ("osc2_ctrl1", "Ctrl 1"), ("osc2_ctrl2", "Ctrl 2")])
+p.row(662, 1268, 228, [("osc2_range", "Range"), ("osc2_fine", "Fine"), ("osc2_ctrl1", "Ctrl 1"), ("osc2_ctrl2", "Ctrl 2")])
 p.panel(8, 320, 768, 300, "OSC COMMON")
-p.row(8, 776, 404, [("osc_shift", "Osc Shift", 150), ("lfo1_env_dest", "LFO1 & Env Dest", 170)])
-p.row(8, 776, 548, [("osc_balance", "Osc Balance"), ("cross_mod_depth", "X-Mod Depth"), ("osc_lfo1_depth", "LFO1 Depth")])
+p.row(8, 776, 396, [("osc_shift", "Osc Shift", 150), ("lfo1_env_dest", "LFO1 & Env Dest", 170)])
+p.row(8, 776, 524, [("osc_balance", "Osc Balance"), ("cross_mod_depth", "X-Mod Depth"), ("osc_lfo1_depth", "LFO1 Depth")])
 p.panel(788, 320, 480, 300, "PITCH ENVELOPE")
 p.row(788, 1268, 480, [("pitch_env_depth", "Depth"), ("pitch_env_attack", "A"), ("pitch_env_decay", "D")])
 p.done()
@@ -187,10 +188,10 @@ p = Page("FILTER", ["cutoff", "resonance", "key_follow", "filter_lfo1_depth", "f
                     "filter_release", "lfo2_rate", "filter_lfo2_depth", "amp_lfo2_depth", "pitch_lfo2_depth", "-", "-", "-"])
 p.panel(8, 8, 760, 300, "FILTER")
 p.row(8, 768, 90, [("filter_type", "Type", 150), ("cutoff_slope", "Slope", 150)])
-p.row(8, 768, 236, [("cutoff", "Cutoff Freq"), ("resonance", "Resonance"), ("key_follow", "Key Follow"), ("filter_lfo1_depth", "LFO1 Depth")])
+p.row(8, 768, 228, [("cutoff", "Cutoff Freq"), ("resonance", "Resonance"), ("key_follow", "Key Follow"), ("filter_lfo1_depth", "LFO1 Depth")])
 p.panel(780, 8, 488, 300, "MODULATION (LFO2)")
 p.row(780, 1268, 90, [("lfo2_depth_select", "Depth Select", 170), ("lfo2_rate", "Rate")])
-p.row(780, 1268, 236, [("filter_lfo2_depth", "Filter"), ("amp_lfo2_depth", "Amp"), ("pitch_lfo2_depth", "Pitch")])
+p.row(780, 1268, 228, [("filter_lfo2_depth", "Filter"), ("amp_lfo2_depth", "Amp"), ("pitch_lfo2_depth", "Pitch")])
 p.panel(8, 320, 1260, 300, "FILTER ENVELOPE")
 p.row(8, 1268, 480, [("filter_env_depth", "Depth"), ("filter_attack", "A"), ("filter_decay", "D"), ("filter_sustain", "S"), ("filter_release", "R")])
 p.done()
@@ -200,10 +201,10 @@ p = Page("AMP", ["amp_level", "amp_lfo1_depth", "amp_attack", "amp_decay", "amp_
                  "bend_up", "bend_down", "-", "-"])
 p.panel(8, 8, 600, 300, "AMP")
 p.row(8, 608, 90, [("amp_lfo1_mode", "LFO1 Mode", 160)])
-p.row(8, 608, 236, [("amp_level", "Level"), ("amp_lfo1_depth", "LFO1 Depth")])
+p.row(8, 608, 228, [("amp_level", "Level"), ("amp_lfo1_depth", "LFO1 Depth")])
 p.panel(620, 8, 648, 300, "PORTAMENTO / SOLO")
 p.row(620, 1268, 90, [("portamento", "Porta On"), ("mono", "Mono"), ("legato", "Legato")])
-p.row(620, 1268, 236, [("portamento_time", "Time"), ("bend_up", "Bend Up"), ("bend_down", "Bend Down")])
+p.row(620, 1268, 228, [("portamento_time", "Time"), ("bend_up", "Bend Up"), ("bend_down", "Bend Down")])
 p.panel(8, 320, 1260, 300, "AMP ENVELOPE")
 p.row(8, 1268, 480, [("amp_attack", "A"), ("amp_decay", "D"), ("amp_sustain", "S"), ("amp_release", "R")])
 p.done()

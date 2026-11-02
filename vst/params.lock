@@ -228,3 +228,7 @@ patch_slot_32
 patch_page_text
 patch_page_prev
 patch_page_next
+favourite
+fav_save
+fav_delete
+fav_text

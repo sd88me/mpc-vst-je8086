@@ -75,6 +75,12 @@ add(dict(key="patch_page_text", name="PAGE", min=0, max=0, default=0, display="s
 add(dict(key="patch_page_prev", name="PAGE -", min=0, max=1, default=0, momentary=True), "Banks")
 add(dict(key="patch_page_next", name="PAGE +", min=0, max=1, default=0, momentary=True), "Banks")
 
+# favourites (appended last: saved projects bind by index): "favourite" is MPC's native program list (vst.json "programs")
+add(dict(key="favourite", name="FAVOURITE", min=0, max=63, default=63, display="int"), "Banks")
+add(dict(key="fav_save", name="SAVE FAV", min=0, max=1, default=0, momentary=True), "Banks")
+add(dict(key="fav_delete", name="DEL FAV", min=0, max=1, default=0, momentary=True), "Banks")
+add(dict(key="fav_text", name="FAVOURITES", min=0, max=0, default=0, display="string", poll=True), "Banks")
+
 order = ["Browse", "Banks", "System", "Osc", "Filter", "Amp", "LFO", "Effects", "Common", "Arp", "Parts", "Control", "Velocity"]
 sections = [{"label": s, "keys": keys_in[s]} for s in order if s in keys_in]
 json.dump({"name": "JE-8086", "params": params, "sections": sections}, open(OUT, "w"), indent=1)
