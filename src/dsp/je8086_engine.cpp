@@ -54,6 +54,7 @@ namespace {
 constexpr int kRate = 44100, kBlock = 128;
 constexpr int kRingFrames = 16384;              // power of two
 constexpr int kTargetFill = 1536;               // frames the emulator thread keeps queued (~35 ms)
+constexpr int kBoostFill = 2688;                // ~60 ms, for 400 ms after a sound load, SysEx or program change
 constexpr int kDefaultThreads = 1;              // one A76 core of a Live III runs it at ~1.7x real time; JE_DSP_THREADS=2..4 splits the ASICs (jeLib JePipeline)
 constexpr int kRemoteCh = 2;                    // MIDI channel 3: the panel keyboard path (arp, key mode); see child_boot_force_system in schwung
 constexpr uint32_t ADDR_TEMP = 0x01000000u;
@@ -113,6 +114,8 @@ Msg dt1(uint32_t addr, const uint8_t *data, int n) {
 }
 
 enum CmdType : uint8_t { C_MIDI, C_SYSEX, C_LOAD, C_PANIC, C_INIT, C_LOADIMG };
+long long mono_ms();
+
 struct Cmd {
     CmdType type = C_MIDI;
     uint8_t m[3] = {0, 0, 0};
@@ -134,6 +137,8 @@ struct Inst {
     std::vector<int16_t> ring = std::vector<int16_t>(kRingFrames * 2);
     std::atomic<uint32_t> wr{0}, rd{0};
     std::atomic<uint32_t> underruns{0};
+    std::atomic<uint32_t> ring_min{0xffffffffu};   // lowest fill render() saw since the last 5 s report
+    std::atomic<uint32_t> burst_max{0};            // largest host read since then
     std::atomic<int> emu_cpu{0}, threads{kDefaultThreads};
 
     std::mutex qm;
@@ -388,10 +393,13 @@ void emu_main(Inst *in) {
     auto send = [&](const Msg &m) { plugin->addMidiEvent(sysex(m)); };
     auto request_temp = [&] { temp_rx = 0; temp_wait = 0; send(temp_request()); };
 
+    long long boost_until = 0;      // run further ahead while a sound load settles (EMULATOR_PORTS.md section 3)
     bool booted = false;            // host commands wait in the queue until the firmware is up (a restored state included)
     auto produce = [&](bool to_ring) {
         std::vector<Cmd> cmds;
         if (booted) { std::lock_guard<std::mutex> l(in->qm); cmds.swap(in->q); }
+        for (auto &c : cmds)
+            if (c.type != C_MIDI || (c.m[0] & 0xf0) == 0xc0) { boost_until = mono_ms() + 400; break; }
         bool reread = false;
         for (auto &c : cmds) {
             switch (c.type) {
@@ -504,15 +512,28 @@ void emu_main(Inst *in) {
     in->set_status("Ready - ROM loaded");
     xlog("[emu] ready");
 
+    long long rep_ms = mono_ms(); long slow_us = 0; uint32_t rep_drops = in->underruns.load();
     while (!in->stop) {
         const uint32_t fill = in->wr.load(std::memory_order_relaxed) - in->rd.load(std::memory_order_acquire);
         static const bool bench = getenv("JE_BENCH") != nullptr;
         if (bench) { in->rd.store(in->wr.load()); }
-        if (!bench && (fill >= (uint32_t)kTargetFill || fill + kBlock > (uint32_t)kRingFrames)) {
+        const uint32_t target = mono_ms() < boost_until ? (uint32_t)kBoostFill : (uint32_t)kTargetFill;
+        if (!bench && (fill >= target || fill + kBlock > (uint32_t)kRingFrames)) {
             std::this_thread::sleep_for(std::chrono::microseconds(500));
             continue;
         }
+        const auto c0 = std::chrono::steady_clock::now();
         produce(true);
+        const long us = (long)std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - c0).count();
+        if (us > slow_us) slow_us = us;
+        if (mono_ms() - rep_ms >= 5000) {          // one line per 5 s into journalctl -u acvs (EMULATOR_PORTS.md section 4)
+            const uint32_t d = in->underruns.load();
+            const uint32_t rmin = in->ring_min.exchange(0xffffffffu), bmax = in->burst_max.exchange(0);
+            if (d != rep_drops || getenv("JE_RINGLOG"))
+                fprintf(stderr, "JE-8086: dropouts %u (+%u), ring min %u, host burst %u, slowest chunk %ld us, emu cpu %d%%\n",
+                        d, d - rep_drops, rmin == 0xffffffffu ? 0 : rmin, bmax, slow_us, in->emu_cpu.load());
+            rep_drops = d; slow_us = 0; rep_ms = mono_ms();
+        }
         if ((block_no % 690) == 0) {
             const auto now = std::chrono::steady_clock::now();
             const long tk = emu_thread_ticks({});
@@ -930,6 +951,8 @@ void eng_render(void *p, int16_t *out, int frames) {
     if (!in || !in->ready.load(std::memory_order_acquire)) { memset(out, 0, (size_t)frames * 4); return; }
     uint32_t r = in->rd.load(std::memory_order_relaxed);
     const uint32_t avail = in->wr.load(std::memory_order_acquire) - r;
+    if (avail < in->ring_min.load(std::memory_order_relaxed)) in->ring_min.store(avail, std::memory_order_relaxed);
+    if ((uint32_t)frames > in->burst_max.load(std::memory_order_relaxed)) in->burst_max.store((uint32_t)frames, std::memory_order_relaxed);
     const int got = (int)std::min<uint32_t>(avail, (uint32_t)frames);
     for (int i = 0; i < got; i++, r++) {
         out[i * 2] = in->ring[(r & (kRingFrames - 1)) * 2];
