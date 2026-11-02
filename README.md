@@ -1,40 +1,84 @@
-# JE-8086 for MPC (Gen2)
+# JE-8086 for MPC
 
-An emulation of the Roland JP-8000 as a native VST2 instrument for **Akai MPC Gen2** standalone devices (MPC Live III and kin: aarch64), with a
-touchscreen skin in the look of gearmulator's JE-8086 plugin ("jeTrancy") and Q-Link control on every page. It runs the original JP-8000 firmware
-on [gearmulator](https://github.com/dsp56300/gearmulator)'s H8S and ESP (voice ASIC) emulators, with the ARM64 work of
-[schwung-je8086](https://github.com/charlesvestal/schwung-je8086).
+A Roland JP-8000 emulation that runs as a plugin instrument on **Akai MPC Gen2 standalone devices** (MPC Live III and other aarch64 MPCs),
+with a full touchscreen editor and Q-Link control.
 
-**Status: 0.1.0 in development, not yet run as a plugin on a device.** The engine passes its test on an MPC Live III (MPC OS 3.9.1, run from a shell):
-boots in about a second, plays, loads patches and performances, parameter edits and the saved state round trip, no dropouts, about 55-65% of one
-A76 core. The plugin passes the wrapper's offline host test. Gen1 devices and the Force are not supported (the ESP JIT has no 32-bit ARM backend).
+It runs the JP-8000's original firmware on [gearmulator](https://github.com/dsp56300/gearmulator)'s emulation of the synth's chips.
+The ARM64 speed-ups come from [schwung-je8086](https://github.com/charlesvestal/schwung-je8086). The look comes from gearmulator's
+"jeTrancy" JE-8086 skin.
 
-*JE-8086 is an independent project, not affiliated with or endorsed by Roland. "JP-8000" is the name of the instrument it emulates.*
+![MAIN page](docs/screenshots/main.png)
 
-## You need your own ROM
-No ROM is included, and none may be shared. Put the eight JP-8000 OS update files (`_00001.mid` ... `_00008.mid`) or a full ROM `.bin` in the plugin's
-`je8086/roms/`. Optional patch/performance banks (`.syx .mid .pat .pfm .j8k`) go in `je8086/banks/`.
+> Screenshots are offline renders of the skin, so the LCD readouts and values are blank. On the device they show the live bank, patch and values.
+
+## Features
+- **The real JP-8000 engine:** the original OS runs on emulated hardware, so you get the supersaw, feedback osc, filters, effects, arpeggiator and
+  Upper/Lower performance modes of the original.
+- **All sounds included in the ROM:** the factory patch banks and 64 performances, browsable on the BANKS page, 32 per page. You can also add
+  your own bank files (`.syx .mid .pat .pfm .j8k`).
+- **Favourites in the MPC PRESET menu:** press **+FAV** on any patch to save it, then pick it from MPC's own preset list. **-FAV** removes it.
+  Up to 64 favourites, kept across projects.
+- **A complete editor on the touchscreen:** 10 pages covering every panel control, with LCD-style readouts in the JP-8000's green on black.
+  - **MAIN:** bank/patch, edit part, key mode, voices, split, detune, tempo, gain, engine status, PANIC and 8 quick-edit knobs
+  - **BANKS:** patch and performance browser, favourites
+  - **OSC:** LFO 1, OSC 1, OSC 2, Osc Common, pitch envelope
+  - **FILTER:** filter, filter envelope, LFO 2 modulation
+  - **AMP:** amp, amp envelope, portamento and solo
+  - **EFFECTS:** tone, chorus, delay
+  - **ARP & PARTS:** arpeggiator and part settings
+  - **TRIG & MORPH**, **CONTROL**, **VELOCITY:** morph and velocity assignments
+- **Q-Links:** each page's knobs are mapped to the Q-Links.
+- **Saved with your project:** the current sound and every edit come back when the project is reopened.
+- **Light on CPU:** about 55-65% of one core on an MPC Live III, with no dropouts in testing.
+
+| | |
+|---|---|
+| ![OSC page](docs/screenshots/osc.png) | ![FILTER page](docs/screenshots/filter.png) |
+| ![EFFECTS page](docs/screenshots/effects.png) | ![ARP & PARTS page](docs/screenshots/arp-parts.png) |
+
+## Requirements
+- An MPC Gen2 standalone device (aarch64, e.g. MPC Live III) running **MPC OS 3.10.1 or later**. Gen1 devices and the Force aren't supported:
+  the emulator's recompiler has no 32-bit ARM backend.
+- **Your own JP-8000 ROM.** No ROM is included, and none may be shared. Either the eight JP-8000 OS update files (`_00001.mid` to `_00008.mid`)
+  or a full ROM dump (`.bin`) work.
 
 ## Install
-- **MPC OS 3.10.1 and later:** `tools/package_310.sh <version>` makes `dist/VST2 Plugins/sd88me - VST - JE-8086/` (the MPC plugin SDK's folder format:
-  `plugin.json`, `VST/je8086-arm64.so`, `Plugin Skins/`). Copy `VST2 Plugins` to the root of a drive, enable Preferences > Enhancements (Beta) >
-  Enable Enhancements and VST2 Support, and put the ROM in `VST/je8086/roms/`.
-- **Earlier MPC OS (rooted device):** the usual `MPC.settings` route of [mpc-vst-plugins](https://github.com/sd88me/mpc-vst-plugins) (`release.py` zip).
+1. Download `JE-8086-<version>-VST2-Plugins.zip` from [Releases](https://github.com/sd88me/mpc-vst-je8086/releases) and unzip it.
+2. Copy the `VST2 Plugins` folder to the root of a drive the MPC can see (internal storage, SD card or USB drive). If that drive already has a
+   `VST2 Plugins` folder, copy the `sd88me - VST - JE-8086` folder into it.
+3. Put your ROM files in `VST2 Plugins/sd88me - VST - JE-8086/VST/je8086/roms/`.
+4. Optional: put extra bank files in `.../VST/je8086/banks/`.
+5. On the MPC, turn on **Preferences > Enhancements (Beta) > Enable Enhancements and VST2 Support**, then restart.
+6. Load **JE-8086** on a plugin track from the External VST Plugins list.
 
-## Using it
-Pages: **MAIN** (bank and patch on the LCD, edit part, key mode, voice assign, output, split, detune, tempo, gain, engine status, PANIC, RELOAD PATCH, and 16
-quick-edit controls), **BANKS** (ROM patch banks A and B, the 64 performances, your bank files; 32 per page), **OSC** (LFO 1, OSC 1, OSC 2, Osc Common, Pitch
-Envelope), **FILTER** (filter, filter envelope, LFO 2 modulation), **AMP** (amp, amp envelope, portamento and solo), **EFFECTS** (tone, chorus, delay),
-**ARP & PARTS** (arpeggiator, upper/lower part settings), **TRIG & MORPH**, **CONTROL** and **VELOCITY** (the morph and velocity assign depths).
-Notes from MPC are played on the JP-8000's panel-keyboard path, so the arpeggiator and key modes work. A program change picks a sound of the current bank.
+The plugin boots its firmware in about a second after it is loaded. If the STATUS readout on MAIN says no ROM was found, check step 3.
 
-## Building
-Needs Docker, Python 3 with Pillow, and a checkout of mpc-vst-plugins (`MPC_VST`, default `~/mpc-vst-plugins`):
+## Tips
+- Notes from the MPC go into the JP-8000's own keyboard input, so the arpeggiator, Split and Dual key modes all work.
+- A MIDI program change picks a sound from the current bank.
+- **RELOAD PATCH** reverts the edits to the stored patch. **PANIC** stops stuck notes.
+- The arpeggiator runs at the TEMPO knob's tempo. It doesn't follow MPC's clock yet.
+
+## Building from source
+You need Docker, Python 3 with Pillow, and a checkout of [mpc-vst-plugins](https://github.com/sd88me/mpc-vst-plugins). Point `MPC_VST` at it
+(the default is `~/mpc-vst-plugins`).
 ```
-./build.sh test      # x86 engine + the wrapper's host test (ASan/UBSan)
-./build.sh all       # aarch64 vst/build/aarch64/je8086.so + the skin
+./build.sh test               # x86 engine + the wrapper's host test (ASan/UBSan)
+./build.sh all                # aarch64 vst/build/aarch64/je8086.so + the skin
+tools/package_310.sh 0.1.0    # dist/JE-8086-0.1.0-VST2-Plugins.zip
 ```
-`build/<arch>/je8086_engine_test <dir with roms/>` boots the ROM and checks notes, presets, parameters and the saved state (run the aarch64 one on the device).
+`build/<arch>/je8086_engine_test <dir with roms/>` boots the ROM and checks notes, presets, parameters and the saved state. Run the aarch64 one on the device.
 
-## Credits and licences
-See [CREDITS.md](CREDITS.md). GPL-3.0 ([LICENSE](LICENSE)).
+## Credits
+JE-8086 for MPC is built on other people's work. See [CREDITS.md](CREDITS.md) for the details.
+- **[gearmulator](https://github.com/dsp56300/gearmulator)** by dsp56300 and contributors: the JP-8000 emulation and the JE-8086 plugin it comes from.
+- **[schwung-je8086](https://github.com/charlesvestal/schwung-je8086)** by Charles Vestal: the ARM64 performance work, the parameter table and the
+  bank reader.
+- **The "jeTrancy" skin** by theusualsuspects: the panel look, wordmark and knobs.
+- **[mpc-vst-plugins](https://github.com/sd88me/mpc-vst-plugins):** the MPC plugin wrapper and skin tools.
+
+## Licence
+**GPL-3.0**: see [LICENSE](LICENSE). The bundled components keep their own licences (GPL-3.0, zlib, BSD/LGPL, SIL OFL 1.1), as listed in CREDITS.md.
+
+*JE-8086 is an independent project, not affiliated with or endorsed by Roland. "JP-8000" is the name of the instrument it emulates. Roland and JP-8000
+are trademarks of their owners.*
