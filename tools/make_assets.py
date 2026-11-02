@@ -44,7 +44,8 @@ fw = src.width // 16
 film = Image.new("RGBA", (104, 104 * 101))
 for i in range(101):
     f = i * 127 // 100
-    fr = src.crop(((f % 16) * fw, (f // 16) * fw, (f % 16) * fw + fw, (f // 16) * fw + fw))
+    x0, y0 = (f % 16) * fw, (f // 16) * fw
+    fr = src.crop((x0 + 38, y0 + 38, x0 + 172, y0 + 172))      # the knob without most of the frame's empty margin, so it fills its box
     film.paste(fr.resize((104, 104), Image.LANCZOS), (0, i * 104))
 film.save(os.path.join(IMG, "knob_je.png"))
 

@@ -66,6 +66,11 @@ class Page:
             self.label(cx, cy - KNOB // 2 - 26, label)
             self.widgets.append('knob cx=%d cy=%d r=%d label="" key=%s ns=0 vs=22 vy=14 bw=%d' % (cx, cy + Y86, KNOB // 2 - 8, key, KNOB + 26))
 
+    def small_knob(self, cx, cy, key, label):
+        """the dense assign pages: a 70 px knob, its label in 14 px"""
+        self.label(cx, cy - 58, label, 14)
+        self.widgets.append('knob cx=%d cy=%d r=%d label="" key=%s ns=0 vs=18 vy=10 bw=%d' % (cx, cy + Y86, 30, key, 118))
+
     def row(self, x0, x1, y, items):
         cw = (x1 - x0) / len(items)
         for i, it in enumerate(items):
@@ -74,7 +79,7 @@ class Page:
 
     def readout(self, cx, cy, key, label, w):
         self.label(cx, cy - 44, label)
-        self.widgets.append('readout cx=%d cy=%d w=%d h=34 label="" key=%s' % (cx, cy + Y86, w, key))
+        self.widgets.append('readout cx=%d cy=%d w=%d h=36 label="" key=%s style=dotmatrix' % (cx, cy + Y86, w, key))
 
     def button(self, cx, cy, key, label):
         self.widgets.append('button cx=%d cy=%d label="%s" key=%s' % (cx, cy + Y86, label, key))
@@ -190,8 +195,8 @@ p.panel(8, 8, 760, 300, "FILTER")
 p.row(8, 768, 90, [("filter_type", "Type", 150), ("cutoff_slope", "Slope", 150)])
 p.row(8, 768, 228, [("cutoff", "Cutoff Freq"), ("resonance", "Resonance"), ("key_follow", "Key Follow"), ("filter_lfo1_depth", "LFO1 Depth")])
 p.panel(780, 8, 488, 300, "MODULATION (LFO2)")
-p.row(780, 1268, 90, [("lfo2_depth_select", "Depth Select", 170), ("lfo2_rate", "Rate")])
-p.row(780, 1268, 228, [("filter_lfo2_depth", "Filter"), ("amp_lfo2_depth", "Amp"), ("pitch_lfo2_depth", "Pitch")])
+p.row(780, 1268, 90, [("lfo2_depth_select", "Depth Select", 200)])
+p.row(780, 1268, 228, [("lfo2_rate", "Rate"), ("filter_lfo2_depth", "Filter"), ("amp_lfo2_depth", "Amp"), ("pitch_lfo2_depth", "Pitch")])
 p.panel(8, 320, 1260, 300, "FILTER ENVELOPE")
 p.row(8, 1268, 480, [("filter_env_depth", "Depth"), ("filter_attack", "A"), ("filter_decay", "D"), ("filter_sustain", "S"), ("filter_release", "R")])
 p.done()
@@ -250,7 +255,13 @@ def assign(name, prefix, title):
         c, r = i % 10, i // 10
         lab = PARAMS[k]["name"].replace("C.", "").replace("V.", "").replace("CTRL ", "").replace("VEL ", "")
         lab = re.sub(r"^(CTL|VEL) ", "", lab)
-        p.ctl(72 + c * 126, 112 + r * 136, k, lab[:13])
+        for a, b in (("ENVELOPE", "ENV"), ("CROSS MODULATION", "X-MOD"), ("CROSS MOD", "X-MOD"), ("OSCILLATOR", "OSC"), ("CONTROL", "CTL"),
+                     ("FILTER", "FLT"), ("PITCH", "PIT"), ("DEPTH", "DPT"), ("ATTACK", "ATK"), ("DECAY", "DCY"), ("SUSTAIN", "SUS"),
+                     ("RELEASE", "REL"), ("FEEDBACK", "FB"), ("BALANCE", "BAL"), ("RESONANCE", "RESO"), ("PORTAMENTO", "PORTA"),
+                     ("MULTI-FX", "FX"), ("CUTOFF FREQ", "CUTOFF"), ("FINE WIDE", "FINE"), ("KEY FOLLOW", "KEY FLW"), (" TIME", ""),
+                     (" LEVEL", " LVL"), ("TONE ", ""), ("AMP ENV", "A.ENV"), ("FLT ENV", "F.ENV"), ("PIT ENV", "P.ENV")):
+            lab = lab.replace(a, b)
+        p.small_knob(72 + c * 126, 116 + r * 140, k, lab[:12])
     p.done()
 
 

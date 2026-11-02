@@ -147,6 +147,10 @@ struct Inst {
     uint32_t fav_stamp = 0;
     char fav_name[64][24] = {};
     Image fav_img[64];
+    std::atomic<long long> fav_list_ms{-100000};             // when MPC last asked for a favourite's name (its PRESET menu is open or being listed)
+    std::mutex stm;
+    char stats_cache[96] = "";
+    int stats_cpu = -1;
     std::atomic<uint32_t> rev{1};
     std::mutex sm;              // everything below
     char status[96] = "Starting...";
@@ -533,6 +537,8 @@ const je_opts_t *find_opts(const char *key) {
     return nullptr;
 }
 
+long long mono_ms() { return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count(); }
+
 int clampi(int v, int lo, int hi) { return v < lo ? lo : v > hi ? hi : v; }
 
 void fav_load(Inst *in);
@@ -865,7 +871,16 @@ int eng_get(void *p, const char *key, char *buf, int n) {
     }
     if (!strcmp(key, "rom_name")) { std::lock_guard<std::mutex> l(in->sm); return put(buf, n, "%s", in->rom_name[0] ? in->rom_name : "-"); }
     if (!strcmp(key, "loading_status")) { std::lock_guard<std::mutex> l(in->sm); return put(buf, n, "%s", in->status); }
-    if (!strcmp(key, "engine_stats")) return put(buf, n, "DROPOUTS %u   CPU %d%%   %d THREADS", in->underruns.load(), in->emu_cpu.load(), in->threads.load());
+    if (!strcmp(key, "engine_stats")) {
+        /* any change of a polled text makes MPC re-list its menus: hold the text while the PRESET menu is in use, and move the CPU
+         * figure in steps of 10 (a number that changes every 2 s kept re-listing the favourites, as on Osirus) */
+        std::lock_guard<std::mutex> l(in->stm);
+        if (mono_ms() - in->fav_list_ms < 15000 && in->stats_cache[0]) return put(buf, n, "%s", in->stats_cache);
+        const int cpu = in->emu_cpu.load();
+        if (in->stats_cpu < 0 || abs(cpu - in->stats_cpu) >= 10) in->stats_cpu = cpu / 10 * 10;
+        snprintf(in->stats_cache, sizeof in->stats_cache, "DROPOUTS %u   CPU %d%%", in->underruns.load(), in->stats_cpu);
+        return put(buf, n, "%s", in->stats_cache);
+    }
     if (!strcmp(key, "gain")) return put(buf, n, "%d", in->gain.load());
     if (!strcmp(key, "edit_part")) return put(buf, n, "%d", clampi(in->part, 0, 2));
     if (!strcmp(key, "favourite")) {      // the picked favourite while it is the sound, else the first empty slot (so picking 1 is never "already current")
@@ -874,6 +889,7 @@ int eng_get(void *p, const char *key, char *buf, int n) {
         return put(buf, n, "%d", cur ? in->fav_current : std::min(in->fav_count, kFavSlots - 1));
     }
     if (!strncmp(key, "favourite:", 10)) {
+        in->fav_list_ms = mono_ms();
         std::lock_guard<std::mutex> l(in->fm);
         const int i = atoi(key + 10);
         return put(buf, n, "%s", i >= 0 && i < in->fav_count ? in->fav_name[i] : "-");
