@@ -7,9 +7,7 @@ It runs the JP-8000's original firmware on [gearmulator](https://github.com/dsp5
 The ARM64 speed-ups come from [schwung-je8086](https://github.com/charlesvestal/schwung-je8086). The look comes from gearmulator's
 "jeTrancy" JE-8086 skin.
 
-![MAIN page](docs/screenshots/main.png)
-
-> Screenshots are offline renders of the skin, so the LCD readouts and values are blank. On the device they show the live bank, patch and values.
+![MAIN page on an MPC Live III](docs/screenshots/main.png)
 
 ## Features
 - **The real JP-8000 engine:** the original OS runs on emulated hardware, so you get the supersaw, feedback osc, filters, effects, arpeggiator and
@@ -31,10 +29,7 @@ The ARM64 speed-ups come from [schwung-je8086](https://github.com/charlesvestal/
 - **Saved with your project:** the current sound and every edit come back when the project is reopened.
 - **Light on CPU:** about 55-65% of one core on an MPC Live III, with no dropouts in testing.
 
-| | |
-|---|---|
-| ![OSC page](docs/screenshots/osc.png) | ![FILTER page](docs/screenshots/filter.png) |
-| ![EFFECTS page](docs/screenshots/effects.png) | ![ARP & PARTS page](docs/screenshots/arp-parts.png) |
+![BANKS page with favourites on an MPC Live III](docs/screenshots/banks.png)
 
 ## Requirements
 - An MPC Gen2 standalone device (aarch64, e.g. MPC Live III) running **MPC OS 3.10.1 or later**. Gen1 devices and the Force aren't supported:
