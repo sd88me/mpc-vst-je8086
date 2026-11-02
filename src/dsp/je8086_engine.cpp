@@ -47,6 +47,7 @@ extern "C" {
 #include "jp8000_banks.h"
 #include "jp8000_params.h"
 #include "je8086_ui.h"
+#include "fast_cores.h"   // copied from mpc-vst-plugins wrapper/fast_cores.h (2026-11-03)
 
 namespace {
 
@@ -238,6 +239,9 @@ synthLib::SMidiEvent sysex(const Msg &m) {
 
 void tune_thread(const char *name) {
     pthread_setname_np(pthread_self(), name);
+    // Gen2 is big.LITTLE (A55 0-3, A76 4-7): keep the emulator off the slow cores. The device's own threads are created
+    // from here and inherit the mask. No-op on same-speed CPUs. JE_NOPIN=1 turns it off (to compare).
+    if (!getenv("JE_NOPIN")) fastcores::pin_this_thread();
     int nice_val = 0;
     if (const char *e = getenv("JE_NICE")) nice_val = atoi(e);
     if (nice_val) setpriority(PRIO_PROCESS, (id_t)syscall(SYS_gettid), nice_val);
