@@ -32,7 +32,7 @@ The ARM64 speed-ups come from [schwung-je8086](https://github.com/charlesvestal/
 ![BANKS page with favourites on an MPC Live III](docs/screenshots/banks.png)
 
 ## Requirements
-- An MPC Gen2 standalone device (aarch64, e.g. MPC Live III) running **MPC OS 3.10.1 or later**. Gen1 devices and the Force aren't supported:
+- An MPC Gen2 standalone device (aarch64, e.g. MPC Live III) running **MPC OS 3.10 or later**. Gen1 devices and the Force aren't supported:
   the emulator's recompiler has no 32-bit ARM backend.
 - **Your own JP-8000 ROM.** No ROM is included, and none may be shared. Either the eight JP-8000 OS update files (`_00001.mid` to `_00008.mid`)
   or a full ROM dump (`.bin`) work.
