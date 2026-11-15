@@ -9,7 +9,6 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 SDK="${MPC_SDK:-$HOME/mpc-plugin-builder-sdk}"
-[ -f "$SDK/framework/mpc_plugin.h" ] || [ -n "${MPC_SDK:-}" ] || SDK="$HOME/mpc-310-private/mpc-plugin-builder-sdk"   # its older place
 MV="${MPC_VST:-$HOME/mpc-vst-plugins}"
 [ -f "$SDK/framework/mpc_plugin.h" ] || { echo "need the plugin builder (MPC_SDK)" >&2; exit 1; }
 IMAGE=xenia-a64-builder

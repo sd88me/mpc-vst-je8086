@@ -4,7 +4,6 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 SDK="${MPC_SDK:-$HOME/mpc-plugin-builder-sdk}"
-[ -f "$SDK/framework/mpc_plugin.h" ] || [ -n "${MPC_SDK:-}" ] || SDK="$HOME/mpc-310-private/mpc-plugin-builder-sdk"   # its older place
 MV="${MPC_VST:-$HOME/mpc-vst-plugins}"
 ROMS="$(cd "${JE_ROMS:-$HOME/roms/JP800015}" && pwd)"
 python3 tools/gen_sdk_params.py >/dev/null

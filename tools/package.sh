@@ -3,7 +3,7 @@
 # ("JE-8086", uid JE86), runs the offline tests, then packs:
 #   dist/JE-8086-<ver>-mpc-aarch64.zip   Live III and other 64-bit MPCs: install.sh, the catalog / Plugin Manager zip. Same layout as
 #                                        0.1.1's (je8086.so at the folder root, je8086/ beside it), so it upgrades 0.1.1 in place
-#   dist/JE-8086-<ver>-mpc-sdk.zip       the same folder for copying into "VST2 Plugins" by hand (MPC OS 3.10.1+)
+#   dist/JE-8086-<ver>-mpc-sdk.zip       the same folder for copying into "VST2 Plugins" by hand (MPC OS 3.10 or later)
 #   dist/JE-8086-<ver>-SHA256SUMS.txt
 # The plugin finds its data as je8086/ next to its .so (as 0.1.1), so both layouts keep the ROM, banks and favourites.
 # MPC_VST: an mpc-vst-plugins checkout with tools/release.py and tools/sdk_zip.py.
