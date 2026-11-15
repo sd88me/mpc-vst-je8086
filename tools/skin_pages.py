@@ -110,8 +110,9 @@ class Page:
         ch = art.fader_cap(cw, red).height
         h = y1 - y0 + ch
         comp = "fader%dx%d%s" % (cw, h, "r" if red else "")
+        nf = min(128, 16384 // h)      # skin images stay under 16384 px tall (catalog_check): fewer frames on a long fader
         tui.need_slider(comp, asset("fader_%dx%d%s.png" % (cw, h, "r" if red else ""), lambda: art.film_strip(
-            [art.fader_frame(cw, h, i / 127, red) for i in range(128)])), cw, h, "Vertical")
+            [art.fader_frame(cw, h, i / (nf - 1), red) for i in range(nf)])), cw, h, "Vertical", nf)
         self.kids.append(tui.entry(key, comp, {"version": 1, "handleName": "Data"}, "%d %d %d %d" % (cx - cw // 2, y0 - ch // 2, cw, h),
                                    remap=tui.P(key), focus="Yes"))
         self.value(key, cx - 50, y1 + ch // 2 + 4, 100, 22, size=17.0, colour="ffb4bccc")

@@ -121,8 +121,8 @@ SLIDERS = {}   # component name -> (film strip file, w, h, drag orientation)
 FIELDS = set()
 
 
-def need_slider(name, strip, w, h, orient="Horizontal"):
-    SLIDERS[name] = (strip, w, h, orient)
+def need_slider(name, strip, w, h, orient="Horizontal", frames=128):
+    SLIDERS[name] = (strip, w, h, orient, frames)
 
 
 def need_field(w, h):
@@ -133,11 +133,11 @@ def slider_defs():
     """One reusable component per slider width: the film strip (a Knob dragged sideways), a focus ring, Q-Link on touch, the big
     knob overlay on double tap / Enter. LCD fields: an invisible value slider over live text (data wheel, Q-Link, drag)."""
     out = []
-    for name, (strip, w, h, orient) in sorted(SLIDERS.items()):
+    for name, (strip, w, h, orient, frames) in sorted(SLIDERS.items()):
         fb = "-4 -4 %d %d" % (w + 8, h + 8)
         out.append({"key": name, "value": component([
             entry("focus", "Focus", FOCUS, fb, visible="WhenFocussed"),
-            entry("strip", "Knob", {"version": 3, "knobType": "FilmStrip", "filmStrip": strip, "numFrames": 128, "invert": False,
+            entry("strip", "Knob", {"version": 3, "knobType": "FilmStrip", "filmStrip": strip, "numFrames": frames, "invert": False,
                                     "dragOrientation": orient, "handleName": "Data"}, "0 0 %d %d" % (w, h)),
         ], actions=[act("Mouse Down", "Q-Link"), act("Double Click", "Show Overlay", "knob overlay"),
                     act("Enter Pressed", "Show Overlay", "knob overlay")])})
@@ -195,8 +195,10 @@ def render_preview(page, tab_names, active, qlink_group=0, keyboard=False):
         if typ in SLIDERS:
             strip = Image.open(os.path.join(OUT, SLIDERS[typ][0]))
             v = S.get(key, 0.5)
-            fh = strip.height // 128
-            f = strip.crop((0, int(round(v * 127)) * fh, strip.width, int(round(v * 127)) * fh + fh))
+            nf = SLIDERS[typ][4]
+            fh = strip.height // nf
+            fi = int(round(v * (nf - 1)))
+            f = strip.crop((0, fi * fh, strip.width, fi * fh + fh))
             img.paste(f, (x, y), f)
         elif typ == "Button":
             on = key is not None and data["buttonId"] == S.get(key + "#", 0 if data["numButtonsInGroup"] > 1 else -1)
