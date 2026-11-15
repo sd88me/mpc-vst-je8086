@@ -27,7 +27,7 @@ The ARM64 speed-ups come from [schwung-je8086](https://github.com/charlesvestal/
 - **Any MIDI channel:** the track's channel doesn't matter.
 - **Saved with your project:** the current sound and every edit come back when the project is reopened. Projects saved with 0.1.x still load.
 
-![BANKS page](docs/skin-preview/banks.png)
+![BANKS page on an MPC Live III](docs/screenshots/banks.png)
 
 ## Requirements
 - An MPC Gen2 standalone device (aarch64, e.g. MPC Live III) running **MPC OS 3.10 or later**. Gen1 devices and the Force aren't supported:

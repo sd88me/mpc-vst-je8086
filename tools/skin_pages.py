@@ -355,7 +355,7 @@ def banks_page():
     header(p)
     p.lcd(20, 104, 300, 560)
     p.lcd(324, 104, 1260, 560)
-    art.lcd_caption(p.d, 30, 108, "BANK")
+    art.lcd_caption(p.d, 56, 108, "BANK")   # clear of the Q-Link badge in the corner
     names = ["PATCH A", "PATCH B", "PERFORMANCES", "MY BANK"]
     for i in range(8):
         y = 128 + i * 52
