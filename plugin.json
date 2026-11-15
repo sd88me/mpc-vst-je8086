@@ -1,0 +1,15 @@
+{
+  "name": "JE-8086",
+  "manufacturer": "sd88me",
+  "version": "1.0.0",
+  "kind": "instrument",
+  "uid": "JE86",
+  "numInputs": 0,
+  "numOutputs": 2,
+  "category": "Synth",
+  "file64": "VST/je8086-arm64.so",
+  "description": "JP-8000 virtual analog synth emulation (gearmulator). Needs your own JP-8000 ROM in je8086/roms/.",
+  "author": "sd88me",
+  "url": "https://github.com/sd88me/mpc-vst-je8086",
+  "license": "GPL-3.0-only"
+}
