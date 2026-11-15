@@ -269,6 +269,17 @@ def Y(v):
     return int(round(8 + (v - 92) * 612 / 528))
 
 
+def env_graph(p, kind, keys, x0, y0, x1, y1):
+    """A live ADSR graph in a green LCD window (JV-880 2.0's widget): drag the handles; the line follows the four params."""
+    p.lcd(x0, y0, x1, y1)
+    name = kind + " env"
+    p.kids.append(tui.entry(name, "Envelope", tui.envelope([("attackHandle", tui.P(keys[0])), ("decayHandle", tui.P(keys[1])),
+                                                            ("sustainHandle", tui.P(keys[2])), ("releaseHandle", tui.P(keys[3]))],
+                                                           name, line=LCD_TXT, accent="ff1a5a24"),
+                            "%d %d %d %d" % (x0 + 12, y0 + 14, x1 - x0 - 24, y1 - y0 - 28), focus="Yes"))
+    p.env_samples[name] = [(0, 0), (.15, 1), (.4, .55), (.72, .55), (.95, 0)]
+
+
 def knob_row(p, x0, x1, cy, ctl, red=(), D=KD):
     """Knobs evenly over [x0, x1] at height cy. ctl: [(key, name, sample)]."""
     n = len(ctl)
@@ -322,8 +333,11 @@ def main_page():
     knob_block(p, 524, 240, 1020, 420, "OSC", [("osc1_ctrl1", "OSC1 CTRL 1", .4), ("osc1_ctrl2", "OSC1 CTRL 2", .5),
                                                ("osc_balance", "BALANCE", .5), ("lfo1_rate", "LFO1 RATE", .6)])
     p.section(16, 432, 512, 620, "AMP ENVELOPE", q=True)
-    for i, (k, nm, s) in enumerate([("amp_attack", "A", .05), ("amp_decay", "D", .5), ("amp_sustain", "S", .8), ("amp_release", "R", .3)]):
-        p.fader(k, 84 + i * 112, 500, 570, nm, s)
+    env_graph(p, "amp", ["amp_attack", "amp_decay", "amp_sustain", "amp_release"], 36, 478, 492, 584)
+    for i, (k, nm) in enumerate([("amp_attack", "A"), ("amp_decay", "D"), ("amp_sustain", "S"), ("amp_release", "R")]):
+        x = 36 + i * 114
+        p.legend(x + 20, 596, nm, 15, art.ORANGE, anchor="la")
+        p.value(k, x + 40, 588, 70, 28, just="left verticallyCentred", colour="ffb4bccc", size=18.0, sample=["6", "64", "102", "38"][i])
     p.qlink_group((16, 432, 512, 620), ["amp_attack", "amp_decay", "amp_sustain", "amp_release"])
     knob_block(p, 524, 432, 1020, 620, "EFFECTS", [("chorus_level", "CHORUS", .3), ("delay_time", "DELAY TIME", .5),
                                                    ("delay_feedback", "FEEDBACK", .3), ("delay_level", "DELAY LEVEL", .3)])
@@ -463,14 +477,8 @@ def env_page():
         if kind == "filter":            # DEPTH beside the graph
             gx1 = x1 - 130
             p.knob("filter_env_depth", x1 - 66, 170, "DEPTH", .7, red=True, D=84)
-        p.lcd(x0 + 20, GY0, gx1, GY1)
         keys = [c[0] for c in ctl]
-        name = kind + " env"
-        p.kids.append(tui.entry(name, "Envelope", tui.envelope([("attackHandle", tui.P(keys[0])), ("decayHandle", tui.P(keys[1])),
-                                                                ("sustainHandle", tui.P(keys[2])), ("releaseHandle", tui.P(keys[3]))],
-                                                               name, line=LCD_TXT, accent="ff1a5a24"),
-                                "%d %d %d %d" % (x0 + 32, GY0 + 14, gx1 - x0 - 44, GY1 - GY0 - 28), focus="Yes"))
-        p.env_samples[name] = [(0, 0), (.15, 1), (.4, .55), (.72, .55), (.95, 0)]
+        env_graph(p, kind, keys, x0 + 20, GY0, gx1, GY1)
         n = len(ctl)
         step = (x1 - x0 - 20) / n
         xs = [int(x0 + 10 + step * (i + 0.5)) for i in range(n)]
