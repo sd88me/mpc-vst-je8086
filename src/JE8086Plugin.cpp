@@ -14,7 +14,7 @@
 //   * text readouts (kText): the value text is the engine's text; the value is a counter bumped when the text changes, because the
 //     host only re-reads a param's text when its value moves.
 //   * favourites: the engine keeps them (<data dir>/favourites.dat, whole temp performances), as in 0.1.1. They are the MPC's PRESET
-//     menu (VST programs 0..63 = the engine's "favourite" slots, named by "favourite:<n>"); +FAV / -FAV are the engine's verbs.
+//     menu (VST programs 0..63 = the engine's "favourite" slots, named by "fav_name:<n>"); +FAV / -FAV are the engine's verbs.
 //   * ui_open (kUi): which drawn pick-list the skin shows; the reserved slots (kReserved) hold the 1.x popup flags' indices.
 // Parameter 0 is BANK. The host nudges parameter 0 on every prepare: a change applies only after it has held for ~40 ms.
 // State: the engine's own "state" JSON is the truth; it travels as the MPC chunk's extra state, and nothing is written to the engine
@@ -596,14 +596,20 @@ private:
         }
     }
 
-    // ---- favourites: the engine's slots, named "favourite:<n>" ("-" when empty) ------------------------------------------------
+    // ---- favourites: the engine's slots, named "fav_name:<n>" ("-" when empty), re-read when the list changes ("fav_gen").
+    // Not "favourite:<n>": that read holds the CPU / dropout readout for 15 s (it is for the MPC's PRESET menu), and a read every
+    // pass would freeze it for good (SDK-PORTING.md, Vavra lessons).
     void refreshFavNames()   // worker thread
     {
         char b[64], k[32];
+        if (!engineGet("fav_gen", b, sizeof b)) return;
+        const long gen = std::atol(b);
+        if (gen == favGen_) return;
+        favGen_ = gen;
         bool any = false;
         for (int i = 0; i < kFavSlots; ++i)
         {
-            std::snprintf(k, sizeof k, "favourite:%d", i);
+            std::snprintf(k, sizeof k, "fav_name:%d", i);
             if (!engineGet(k, b, sizeof b)) continue;
             const std::string nm = std::to_string(i + 1) + " " + (std::strcmp(b, "-") ? std::string(b) : std::string("--"));
             if (programs_[(size_t)i].name != nm) { programs_[(size_t)i].name = nm; any = true; }
@@ -648,6 +654,7 @@ private:
     std::string pendingState_;                 // a project's state given before the engine booted
     std::atomic<long long> ignoreProgUntil_{0};
     int lastProgram_ = 0;   // worker thread
+    long favGen_ = -1;      // worker thread: the engine's fav_gen the names were read at
     // audio thread: resampler
     double step_ = 1.0, frac_ = 0;
     int have_ = 0, srcPos_ = 0, srcLen_ = 0;

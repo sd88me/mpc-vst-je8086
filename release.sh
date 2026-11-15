@@ -13,7 +13,7 @@ EXTRA="$(mktemp -d)"; trap 'rm -rf "$EXTRA"' EXIT
 cp -r release/je8086/. "$EXTRA/"; cp LICENSE CREDITS.md "$EXTRA/"        # the installed plugin folder carries its licence and credits
 python3 "$MPC_VST/tools/release.py" --so vst/build/aarch64/je8086.so --skin "vst/build/skin/sd88me - VST - JE-8086" \
   --entry vst/build/pluginlist-entry.xml --version "$VER" --extra "$EXTRA:je8086" \
-  --repo sd88me/mpc-vst-je8086 --license GPL-3.0-only --id je8086 --user-data je8086/roms --user-data je8086/banks --requires "your own JP-8000 ROM" -o dist
+  --repo sd88me/mpc-vst-je8086 --license GPL-3.0-only --id je8086 --user-data je8086/roms --user-data je8086/banks --user-data je8086/favourites.dat --requires "your own JP-8000 ROM" -o dist
 python3 "$MPC_VST/tools/catalog_check.py" "dist/JE-8086-$VER-mpc-aarch64.zip" --catalog --expect-id je8086 --expect-repo sd88me/mpc-vst-je8086
 # the package must carry no ROM: refuse anything that looks like one
 if python3 -I -m zipfile -l "dist/JE-8086-$VER-mpc-aarch64.zip" | grep -i -E '\.(bin|mid|syx|rom)\b' | grep -v "PUT_"; then

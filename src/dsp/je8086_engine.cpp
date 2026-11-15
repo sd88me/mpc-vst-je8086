@@ -155,6 +155,7 @@ struct Inst {
     char fav_name[64][24] = {};
     Image fav_img[64];
     Image fav_pending; std::string fav_pending_name; bool fav_has_pending = false;   // taken by "fav_begin" (the naming keyboard), saved by "fav_save_as"
+    std::atomic<uint32_t> fav_gen{0};                       // bumped by every change to the list (add, rename, delete, load)
     std::atomic<long long> fav_list_ms{-100000};             // when MPC last asked for a favourite's name (its PRESET menu is open or being listed)
     std::mutex stm;
     char stats_cache[96] = "";
@@ -703,6 +704,7 @@ void fav_load(Inst *in) {
             in->fav_count++;
         }
     fclose(f);
+    in->fav_gen++;
     xlog("[fav] %d loaded", in->fav_count);
 }
 
@@ -714,6 +716,7 @@ bool fav_write(Inst *in) {            // under fm
     for (int i = 0; ok && i < in->fav_count; i++)
         ok = fwrite(in->fav_name[i], 1, 24, f) == 24 && fwrite(&in->fav_img[i], 1, sizeof(Image), f) == sizeof(Image);
     ok = (fclose(f) == 0) && ok;
+    in->fav_gen++;
     return ok && rename(tmp.c_str(), path.c_str()) == 0;
 }
 
@@ -977,6 +980,12 @@ int eng_get(void *p, const char *key, char *buf, int n) {
         in->fav_list_ms = mono_ms();
         std::lock_guard<std::mutex> l(in->fm);
         const int i = atoi(key + 10);
+        return put(buf, n, "%s", i >= 0 && i < in->fav_count ? in->fav_name[i] : "-");
+    }
+    if (!strcmp(key, "fav_gen")) return put(buf, n, "%u", in->fav_gen.load());
+    if (!strncmp(key, "fav_name:", 9)) {  // as favourite:<n>, without holding the stats readout (that is for the MPC's own PRESET-menu reads)
+        std::lock_guard<std::mutex> l(in->fm);
+        const int i = atoi(key + 9);
         return put(buf, n, "%s", i >= 0 && i < in->fav_count ? in->fav_name[i] : "-");
     }
     if (!strcmp(key, "fav_pending_name")) { std::lock_guard<std::mutex> l(in->fm); return put(buf, n, "%s", in->fav_has_pending ? in->fav_pending_name.c_str() : ""); }
