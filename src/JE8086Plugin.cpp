@@ -30,6 +30,7 @@ extern "C" {
 #include "params_gen.h"
 
 #include <sys/stat.h>
+#include <dirent.h>
 
 #include <algorithm>
 #include <atomic>
@@ -86,6 +87,23 @@ uint32_t fnv(const char* s)
     return h;
 }
 
+// a ROM in a roms/ folder: any file but the PUT_..._HERE.txt placeholder and readme
+bool hasRom(const std::string& dir)
+{
+    DIR* d = opendir(dir.c_str());
+    if (!d) return false;
+    bool any = false;
+    while (dirent* e = readdir(d))
+    {
+        const std::string n = e->d_name;
+        if (n == "." || n == ".." || n.rfind("PUT_", 0) == 0 || n == "readme.txt") continue;
+        any = true;
+        break;
+    }
+    closedir(d);
+    return any;
+}
+
 bool isState(const std::string& s) { return s.size() > 2 && s[0] == '{' && s.find("\"state_version\"") != std::string::npos; }
 
 thread_local int t_pushing = -1;   // the parameter the worker is telling the host about right now (its echo is ignored)
@@ -120,11 +138,19 @@ public:
         lastPos_.assign(n, -1.0f);
         textHash_.assign(n, 0u);
 
-        // The engine reads <data dir>/roms/ and keeps banks/ and favourites.dat there. The data dir stays where 0.1.1 had it, next to
-        // the .so: <plugin folder>/VST/je8086 (1.x's MODULE_SUBDIR), so an upgrade keeps the ROM and favourites. (Not
-        // mpc::contentPath(): a function-local static std::string.)
-        const std::string folder = mpc::detail::computePluginFolder();
-        dataDir_ = folder + "/VST/je8086";
+        // The engine reads <data dir>/roms/ and keeps banks/ and favourites.dat there. As in 0.1.1 (MODULE_SUBDIR), the data dir is
+        // je8086/ next to the .so: <folder>/je8086 for the catalog install (je8086.so at the folder root), <folder>/VST/je8086 for the
+        // SDK folder (VST/je8086-arm64.so). Either way an upgrade keeps the ROM and favourites. MPC_PLUGIN_FOLDER (tests) is the folder.
+        const char* env = std::getenv("MPC_PLUGIN_FOLDER");
+        const std::string lib = mpc::detail::libraryPath();
+        const std::string soDir = lib.empty() ? mpc::detail::computePluginFolder() : mpc::detail::parentOf(mpc::detail::normaliseSlashes(lib));
+        dataDir_ = (env && env[0] ? std::string(env) + "/VST" : soDir) + "/je8086";
+        // 0.1.x copied by hand (the VST2-Plugins zip) kept its data in <folder>/VST/je8086: use that while the new place has no ROM
+        if (!(env && env[0]) && !hasRom(dataDir_ + "/roms"))
+        {
+            const std::string old = mpc::detail::computePluginFolder() + "/VST/je8086";
+            if (old != dataDir_ && hasRom(old + "/roms")) dataDir_ = old;
+        }
         eng_ = mpc_engine();
         inst_ = eng_->create(dataDir_.c_str());
         for (int i = 0; i < kFavSlots; ++i) addProgram((std::to_string(i + 1) + " --").c_str(), {});
