@@ -418,12 +418,12 @@ def osc_page():
     p.qlink_group((772, Y(92), 1264, Y(356)), ["osc2_range", "osc2_fine", "osc2_ctrl1", "osc2_ctrl2"])
     # OSC COMMON
     p.section(16, Y(368), 1264, Y(620), "OSC COMMON", q=True)
-    knob_row(p, 22, 820, Y(470), [("osc_balance", "OSC BALANCE", .5), ("cross_mod_depth", "X-MOD DEPTH", 0),
+    knob_row(p, 22, 820, Y(500), [("osc_balance", "OSC BALANCE", .5), ("cross_mod_depth", "X-MOD DEPTH", 0),
                                ("osc_lfo1_depth", "LFO1 DEPTH", .5), ("osc_shift", "OSC SHIFT", .5)], D=96)
-    p.legend(1030, Y(400), "RING", 14, art.ORANGE)
-    p.toggle("ring_mod", 960, Y(424), 140, 40, "RING MOD")
-    p.legend(1030, Y(488), "LFO 1 & ENV DEST", 14, art.ORANGE)
-    p.segments("lfo1_env_dest", 840, Y(514), 400, 40, labels=["OSC 1+2", "OSC 2", "X-MOD"], gap=8, size=13)
+    p.legend(1030, Y(430), "RING", 14, art.ORANGE)
+    p.toggle("ring_mod", 960, Y(454), 140, 40, "RING MOD")
+    p.legend(1030, Y(518), "LFO 1 & ENV DEST", 14, art.ORANGE)
+    p.segments("lfo1_env_dest", 840, Y(544), 400, 40, labels=["OSC 1+2", "OSC 2", "X-MOD"], gap=8, size=13)
     p.qlink_group((16, Y(368), 1264, Y(620)), ["osc_balance", "cross_mod_depth", "osc_lfo1_depth", "osc_shift"])
     return p
 
@@ -445,12 +445,12 @@ def filter_page():
     p.segments("amp_lfo1_mode", 1116, Y(148), 132, 34, labels=["OFF", "AUTO", "MANUAL"], cols=1, row_gap=8, size=13)
     p.qlink_group((772, Y(92), 1264, Y(356)), ["amp_level", "amp_lfo1_depth", "amp_lfo2_depth", "gain"])
     p.section(16, Y(368), 760, Y(620), "MODULATION (LFO 2)", q=True)
-    knob_row(p, 22, 560, Y(480), [("lfo2_rate", "RATE", .5), ("pitch_lfo2_depth", "PITCH DEPTH", .5), ("filter_lfo2_depth", "FILTER DEPTH", .5)], D=96)
-    p.legend(660, Y(400), "DEPTH SELECT", 13, art.ORANGE)
-    p.segments("lfo2_depth_select", 580, Y(424), 160, 34, labels=["PITCH", "FILTER", "AMP"], cols=1, row_gap=8, size=13)
+    knob_row(p, 22, 560, Y(510), [("lfo2_rate", "RATE", .5), ("pitch_lfo2_depth", "PITCH DEPTH", .5), ("filter_lfo2_depth", "FILTER DEPTH", .5)], D=96)
+    p.legend(660, Y(430), "DEPTH SELECT", 13, art.ORANGE)
+    p.segments("lfo2_depth_select", 580, Y(454), 160, 34, labels=["PITCH", "FILTER", "AMP"], cols=1, row_gap=8, size=13)
     p.qlink_group((16, Y(368), 760, Y(620)), ["lfo2_rate", "pitch_lfo2_depth", "filter_lfo2_depth", "lfo2_depth_select"])
     p.section(772, Y(368), 1264, Y(620), "TONE CONTROL", q=True)
-    knob_row(p, 778, 1258, Y(480), [("tone_bass", "BASS", .5), ("tone_treble", "TREBLE", .5)], D=96)
+    knob_row(p, 778, 1258, Y(510), [("tone_bass", "BASS", .5), ("tone_treble", "TREBLE", .5)], D=96)
     p.qlink_group((772, Y(368), 1264, Y(620)), ["tone_bass", "tone_treble"])
     return p
 
@@ -507,8 +507,8 @@ def fx_page():
     knob_row(p, 904, 1258, Y(250), [("delay_time", "TIME", .5), ("delay_feedback", "FEEDBACK", .3), ("delay_level", "LEVEL", .3)], D=84)
     p.qlink_group((642, Y(92), 1264, Y(356)), ["delay_time", "delay_feedback", "delay_level", "delay_type"])
     p.section(16, Y(368), 630, Y(620), "PORTAMENTO / BEND", q=True)
-    p.toggle("portamento", 40, Y(420), 120, 44, "PORTA")
-    knob_row(p, 170, 624, Y(470), [("portamento_time", "PORTA TIME", .3), ("bend_up", "BEND UP", .1), ("bend_down", "BEND DOWN", .9)], D=96)
+    p.toggle("portamento", 40, Y(450), 120, 44, "PORTA")
+    knob_row(p, 170, 624, Y(500), [("portamento_time", "PORTA TIME", .3), ("bend_up", "BEND UP", .1), ("bend_down", "BEND DOWN", .9)], D=96)
     p.qlink_group((16, Y(368), 630, Y(620)), ["portamento_time", "bend_up", "bend_down", "portamento"])
     p.section(642, Y(368), 1264, Y(620), "CONTROL")
     art.bracket(p.d, 672, 930, Y(430), "SOLO SW")
