@@ -60,7 +60,7 @@ static const PSpec g_pspecs[] = {
     {"engine_stats", "STATS", 0.0f, 1023.0f, 0.0f, 514, nullptr, 0, -1, 0.0f},
     {"gain", "GAIN %", 10.0f, 400.0f, 100.0f, 1024, nullptr, 0, -1, 0.0f},
     {"init_patch", "INIT", 0.0f, 1.0f, 0.0f, 513, nullptr, 0, -1, 0.0f},
-    {"edit_part", "EDIT PART", 0.0f, 2.0f, 0.0f, 3080, ch_14, 3, -1, 0.0f},
+    {"edit_part", "EDIT PART", 0.0f, 2.0f, 2.0f, 3080, ch_14, 3, -1, 0.0f},
     {"lfo1_waveform", "LFO1 WAVE", 0.0f, 3.0f, 0.0f, 1032, ch_15, 4, -1, 0.0f},
     {"lfo1_rate", "LFO1 RATE", 0.0f, 127.0f, 64.0f, 1024, nullptr, 0, -1, 0.0f},
     {"lfo1_fade", "LFO1 FADE", 0.0f, 127.0f, 0.0f, 1024, nullptr, 0, -1, 0.0f},

@@ -291,7 +291,7 @@ def main_page():
     p.lcd(X0, Y0, X1, Y1)
     bank_patch_row(p, X0, X1, Y0, Y0 + 66, big=34.0)
     art.lcd_rule(p.d, X0 + 8, X1 - 8, Y0 + 70)
-    fields = [("key_mode", "KEY MODE", "SINGLE"), ("edit_part", "PANEL", "UPPER"), ("voice_assign", "VOICES", "8-2"),
+    fields = [("key_mode", "KEY MODE", "SINGLE"), ("edit_part", "PANEL", "BOTH"), ("voice_assign", "VOICES", "8-2"),
               ("tempo", "TEMPO", "120"), ("arp_mode", "ARPEGGIO", "UP")]
     fw = (X1 - X0) // len(fields)
     for i, (k, cap, smp) in enumerate(fields):
@@ -327,7 +327,7 @@ def main_page():
     p.legend(RX + RW // 2, 250, "KEY MODE", 14, art.ORANGE)
     yb = p.segments("key_mode", RX + 8, 276, RW - 16, 40, gap=8, size=13)
     p.legend(RX + RW // 2, yb + 14, "PANEL", 14, art.ORANGE)
-    yb = p.segments("edit_part", RX + 8, yb + 40, RW - 16, 40, gap=8, size=13)
+    yb = p.segments("edit_part", RX + 8, yb + 40, RW - 16, 40, gap=8, size=13, sel=2)
     p.legend(RX + RW // 2, yb + 14, "ARPEGGIATOR", 14, art.ORANGE)
     p.toggle("arp_switch", RX + 8, yb + 40, (RW - 24) // 2, 44, "ON")
     p.toggle("arp_hold", RX + 16 + (RW - 24) // 2, yb + 40, (RW - 24) // 2, 44, "HOLD")

@@ -146,7 +146,7 @@ struct Inst {
     std::vector<Cmd> q;
 
     /* UI side */
-    std::atomic<int> bank{0}, preset{0}, page{0}, bank_page{0}, gain{100}, part{0};
+    std::atomic<int> bank{0}, preset{0}, page{0}, bank_page{0}, gain{100}, part{2};   // part: 0 UPPER, 1 LOWER, 2 BOTH (the default: edits reach both parts)
     std::atomic<uint32_t> load_gen{0};                      // bumped by every sound load: a favourite stays "current" until the next one
     /* favourites (MPC's native program list, vst.json "programs": favourite): whole temp performances, from any bank, in <dir>/favourites.dat */
     std::mutex fm;
@@ -502,16 +502,16 @@ void emu_main(Inst *in) {
         dev.reset();
         return;
     }
-    // single key mode on the upper part, unless a restored state (queued) sets a whole performance
+    // single key mode, panel on both parts, unless a restored state (queued) sets a whole performance
     {
         bool have_state = false;
         { std::lock_guard<std::mutex> l(in->qm); for (auto &c : in->q) if (c.type == C_LOADIMG || c.type == C_LOAD) have_state = true; }
         booted = true;
         if (!have_state) {
-            // a fresh instance: SINGLE on the upper part, arpeggiator off and not held (the ROM's temp performance may be DUAL with a latched arp)
-            const uint8_t single = 0, upper = 1, off = 0;
+            // a fresh instance: SINGLE, panel UPPER & LOWER (the device's 0x12: 0 UPPER, 1 LOWER, 2 both), arpeggiator off and not held (the ROM's temp performance may be DUAL with a latched arp)
+            const uint8_t single = 0, both = 2, off = 0;
             send(dt1(ADDR_TEMP | T_COMMON | jpbank::linear_to_packed(0x10), &single, 1));
-            send(dt1(ADDR_TEMP | T_COMMON | jpbank::linear_to_packed(0x12), &upper, 1));
+            send(dt1(ADDR_TEMP | T_COMMON | jpbank::linear_to_packed(0x12), &both, 1));
             send(dt1(ADDR_TEMP | T_COMMON | jpbank::linear_to_packed(0x17), &off, 1));
             send(dt1(ADDR_TEMP | T_COMMON | jpbank::linear_to_packed(0x1B), &off, 1));
             Cmd c; c.type = C_LOAD; c.a = in->bank.load(); c.b = in->preset.load(); c.c = 2;

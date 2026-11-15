@@ -126,7 +126,7 @@
     "LOWER",
     "BOTH"
    ],
-   "default": "UPPER",
+   "default": "BOTH",
    "refresh_display": true
   },
   {
