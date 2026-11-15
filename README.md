@@ -29,6 +29,8 @@ The ARM64 speed-ups come from [schwung-je8086](https://github.com/charlesvestal/
 
 ![BANKS page on an MPC Live III](docs/screenshots/banks.png)
 
+![ENVELOPES page on an MPC Live III](docs/screenshots/envelopes.png)
+
 ## Requirements
 - An MPC Gen2 standalone device (aarch64, e.g. MPC Live III) running **MPC OS 3.10 or later**. Gen1 devices and the Force aren't supported:
   the emulator's recompiler has no 32-bit ARM backend.
