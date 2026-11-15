@@ -433,6 +433,11 @@ void emu_main(Inst *in) {
                     plugin->addMidiEvent(synthLib::SMidiEvent(synthLib::MidiEventSource::Host, (uint8_t)(0xb0 | ch), 123, 0));
                     plugin->addMidiEvent(synthLib::SMidiEvent(synthLib::MidiEventSource::Host, (uint8_t)(0xb0 | ch), 120, 0));
                 }
+                {   // PANIC also lets go of a latched arpeggio (ARP HOLD off): a held arp keeps playing after all notes off
+                    const uint8_t off = 0;
+                    send(dt1(ADDR_TEMP | T_COMMON | jpbank::linear_to_packed(0x1B), &off, 1));
+                    reread = true;
+                }
                 break;
             case C_INIT:
                 break;
@@ -500,9 +505,12 @@ void emu_main(Inst *in) {
         { std::lock_guard<std::mutex> l(in->qm); for (auto &c : in->q) if (c.type == C_LOADIMG || c.type == C_LOAD) have_state = true; }
         booted = true;
         if (!have_state) {
-            const uint8_t single = 0, upper = 1;
+            // a fresh instance: SINGLE on the upper part, arpeggiator off and not held (the ROM's temp performance may be DUAL with a latched arp)
+            const uint8_t single = 0, upper = 1, off = 0;
             send(dt1(ADDR_TEMP | T_COMMON | jpbank::linear_to_packed(0x10), &single, 1));
             send(dt1(ADDR_TEMP | T_COMMON | jpbank::linear_to_packed(0x12), &upper, 1));
+            send(dt1(ADDR_TEMP | T_COMMON | jpbank::linear_to_packed(0x17), &off, 1));
+            send(dt1(ADDR_TEMP | T_COMMON | jpbank::linear_to_packed(0x1B), &off, 1));
             Cmd c; c.type = C_LOAD; c.a = in->bank.load(); c.b = in->preset.load(); c.c = 2;
             in->push(std::move(c));
         }
@@ -921,6 +929,7 @@ int eng_get(void *p, const char *key, char *buf, int n) {
     }
     if (!strcmp(key, "fav_text")) { std::lock_guard<std::mutex> l(in->fm); return put(buf, n, "FAVOURITES %d / %d", in->fav_count, kFavSlots); }
     if (!strcmp(key, "display_rev")) return put(buf, n, "%u", in->rev.load());
+    if (!strcmp(key, "ready")) return put(buf, n, "%d", in->ready.load() ? 1 : 0);
     if (!strcmp(key, "state")) {
         std::lock_guard<std::mutex> l(in->sm);
         int off = put(buf, n, "{\"state_version\":1,\"bank\":%d,\"preset\":%d,\"gain\":%d,\"part\":%d", in->bank.load(), in->preset.load(), in->gain.load(), in->part.load());
