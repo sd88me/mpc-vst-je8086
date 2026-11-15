@@ -41,15 +41,18 @@ def dump(v, ind=0):
 
 
 # ---- building blocks -----------------------------------------------------------------------------------------------------
-def bounds(b, focus="No", visible="Always"):
-    return {"version": 1, "acceptsHWFocus": focus, "showWhenDataModelInvalid": "Show", "whenVisible": visible,
-            "boundsType": "Absolute", "bounds": b}
+def bounds(b, focus="No", visible="Always", ind=None):
+    d = {"version": 1, "acceptsHWFocus": focus, "showWhenDataModelInvalid": "Show", "whenVisible": visible,
+         "boundsType": "Absolute", "bounds": b}
+    if ind:   # shown only while a parameter has a given value (Vavra's naming keyboard: "IndexedEnabling/1/2/Parameter <kb_open>")
+        d["additionalInvalidatingHandles"] = ind
+    return d
 
 
-def entry(name, typ, data, b, remap=None, focus="No", visible="Always"):
+def entry(name, typ, data, b, remap=None, focus="No", visible="Always", ind=None):
     return {"version": 2, "componentData": {"version": 1, "name": name, "type": typ, "data": data},
             "handle remapping": {"version": 1, "map": [{"key": "Data", "value": remap}] if remap else []},
-            "bounds": bounds(b, focus, visible)}
+            "bounds": bounds(b, focus, visible, ind)}
 
 
 def bg(colour="0", image=""):
@@ -79,9 +82,9 @@ def label(kind, b, remap=None, **ts):
     return entry("label", "Label", d, b, remap)
 
 
-def button(name, key, on, off, b, button_id=1, group=1, focus="Yes"):
+def button(name, key, on, off, b, button_id=1, group=1, focus="Yes", ind=None):
     return entry(name, "Button", {"version": 2, "onImage": on, "offImage": off, "buttonId": button_id, "numButtonsInGroup": group,
-                                  "handleName": "Data", "gestureBehaviour": "Instant"}, b, remap=P(key), focus=focus)
+                                  "handleName": "Data", "gestureBehaviour": "Instant"}, b, remap=P(key), focus=focus, ind=ind)
 
 
 def definitions():
@@ -163,7 +166,7 @@ def qlinks_for(pages):
 
 
 # ---- preview: the page as the MPC should draw it (sample values), for mock-up review ------------------------------------
-def render_preview(page, tab_names, active, qlink_group=0):
+def render_preview(page, tab_names, active, qlink_group=0, keyboard=False):
     from PIL import Image, ImageDraw
     import make_je_skin as art
     W, H, TOP = 1280, 800, 110
@@ -177,13 +180,16 @@ def render_preview(page, tab_names, active, qlink_group=0):
     content = Image.open(os.path.join(OUT, page.bgname)).convert("RGB")
     img.paste(content, (0, TOP))
     S = page.sample
-    for k in page.kids:
+    for k in page.kids + (page.overlay if keyboard else []):
         cd, b = k["componentData"], [int(float(x)) for x in k["bounds"]["bounds"].split()]
         x, y, w, h = b[0], b[1] + TOP, b[2], b[3]
         typ, data = cd["type"], cd["data"]
         remap = k["handle remapping"]["map"][0]["value"] if k["handle remapping"]["map"] else None
         key = KEYS[int(remap.split()[-1])] if remap and remap.startswith("Parameter") else None
         if typ == "Image" and data.get("imageType") == "Regular":
+            if k in page.overlay:
+                pic = Image.open(os.path.join(OUT, data["image"])).convert("RGBA")
+                img.paste(pic, (x, y), pic)
             continue
         if typ in SLIDERS:
             strip = Image.open(os.path.join(OUT, SLIDERS[typ][0]))
@@ -215,7 +221,7 @@ def render_preview(page, tab_names, active, qlink_group=0):
                     d.ellipse([q[0] - 8, q[1] - 8, q[0] + 8, q[1] + 8], outline=(26, 32, 8), width=2, fill=(196, 220, 88))
         elif typ.startswith("lcdfield"):
             pass
-    if page.groups and qlink_group is not None and qlink_group < len(page.groups):
+    if page.groups and qlink_group is not None and not keyboard and qlink_group < len(page.groups):
         gx, gy, gw, gh = [int(v) for v in page.groups[qlink_group].split()]
         d.rectangle([gx, gy + TOP, gx + gw, gy + gh + TOP], outline=art.QLINK, width=2)
         d.rectangle([gx, gy + TOP, gx + 22, gy + TOP + 20], fill=art.QLINK)
@@ -260,6 +266,8 @@ def main():
             out = os.path.join(PREVIEW, "%s.png" % re.sub(r"[^a-z0-9]+", "_", p.name.lower()).strip("_"))
             render_preview(p, names, p.fn).save(out)
             print("preview", out)
+            if p.name == "MAIN" and p.overlay:
+                render_preview(p, names, p.fn, keyboard=True).save(out.replace(".png", "_keyboard.png"))
 
 
 if __name__ == "__main__":

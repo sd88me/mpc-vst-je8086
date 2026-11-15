@@ -24,6 +24,7 @@
 #include <exception>
 #include <memory>
 #include <mutex>
+#include <random>
 #include <string>
 #include <sys/resource.h>
 #include <sys/syscall.h>
@@ -153,6 +154,7 @@ struct Inst {
     uint32_t fav_stamp = 0;
     char fav_name[64][24] = {};
     Image fav_img[64];
+    Image fav_pending; std::string fav_pending_name; bool fav_has_pending = false;   // taken by "fav_begin" (the naming keyboard), saved by "fav_save_as"
     std::atomic<long long> fav_list_ms{-100000};             // when MPC last asked for a favourite's name (its PRESET menu is open or being listed)
     std::mutex stm;
     char stats_cache[96] = "";
@@ -715,27 +717,61 @@ bool fav_write(Inst *in) {            // under fm
     return ok && rename(tmp.c_str(), path.c_str()) == 0;
 }
 
-/* the live sound, knob changes included: a performance by its bank name, a patch by its own name */
-void fav_save(Inst *in) {
-    Image im;
-    std::string nm;
-    {
-        std::lock_guard<std::mutex> l(in->sm);
-        if ((in->img_valid & IMG_ALL) != IMG_ALL) return;
-        im = in->img;
-        const int b = in->bank, p = in->preset;
-        const bool perf = b < (int)in->banks.size() && in->banks[b].is_perf;
-        nm = perf && p < (int)in->banks[b].presets.size() ? in->banks[b].presets[p].name : in->cur_name;
-    }
+/* the live sound, knob changes included, and its default name: a performance by its bank name, a patch by its own name */
+bool fav_take(Inst *in, Image &im, std::string &nm) {
+    std::lock_guard<std::mutex> l(in->sm);
+    if ((in->img_valid & IMG_ALL) != IMG_ALL) return false;
+    im = in->img;
+    const int b = in->bank, p = in->preset;
+    const bool perf = b < (int)in->banks.size() && in->banks[b].is_perf;
+    nm = perf && p < (int)in->banks[b].presets.size() ? in->banks[b].presets[p].name : in->cur_name;
+    return true;
+}
+
+/* store under a name; a sound already stored only takes the new name when rename is set */
+void fav_store(Inst *in, const Image &im, const std::string &nm, bool rename) {
     std::lock_guard<std::mutex> l(in->fm);
+    char name[24];
+    snprintf(name, sizeof name, "%s", nm.empty() ? "Favourite" : nm.c_str());
+    for (int i = 0; i < in->fav_count; i++)
+        if (!memcmp(&in->fav_img[i], &im, sizeof im)) {         // already there
+            if (rename) { memcpy(in->fav_name[i], name, 24); fav_write(in); in->fav_current = i; in->fav_stamp = in->load_gen; }
+            return;
+        }
     if (in->fav_count >= kFavSlots) return;
-    for (int i = 0; i < in->fav_count; i++) if (!memcmp(&in->fav_img[i], &im, sizeof im)) return;      // already there
     const int i = in->fav_count;
-    snprintf(in->fav_name[i], 24, "%s", nm.empty() ? "Favourite" : nm.c_str());
+    memcpy(in->fav_name[i], name, 24);
     in->fav_img[i] = im;
     in->fav_count++;
     if (!fav_write(in)) in->fav_count--;
     else { in->fav_current = i; in->fav_stamp = in->load_gen; xlog("[fav] saved %d \"%s\"", i + 1, in->fav_name[i]); }
+}
+
+void fav_save(Inst *in) {
+    Image im;
+    std::string nm;
+    if (fav_take(in, im, nm)) fav_store(in, im, nm, false);
+}
+
+/* the native front end's naming keyboard: +FAV takes the sound as it is now ("fav_begin"), SAVE stores it under the typed name */
+void fav_begin(Inst *in) {
+    Image im;
+    std::string nm;
+    const bool ok = fav_take(in, im, nm);
+    std::lock_guard<std::mutex> l(in->fm);
+    in->fav_has_pending = ok;
+    if (ok) { in->fav_pending = im; in->fav_pending_name = nm; }
+}
+
+void fav_save_as(Inst *in, const char *name) {
+    Image im;
+    {
+        std::lock_guard<std::mutex> l(in->fm);
+        if (!in->fav_has_pending) return;
+        im = in->fav_pending;
+        in->fav_has_pending = false;
+    }
+    fav_store(in, im, name ? name : "", true);
 }
 
 void fav_delete(Inst *in) {           // only the favourite that is the current sound
@@ -836,7 +872,23 @@ void eng_set(void *p, const char *key, const char *val) {
     if (!strcmp(key, "all_notes_off")) { if (press) { Cmd c; c.type = C_PANIC; in->push(std::move(c)); } return; }
     if (!strcmp(key, "fav_save")) { if (press) { fav_save(in); in->bump(); } return; }
     if (!strcmp(key, "fav_delete")) { if (press) { fav_delete(in); in->bump(); } return; }
+    if (!strcmp(key, "fav_begin")) { fav_begin(in); return; }
+    if (!strcmp(key, "fav_save_as")) { fav_save_as(in, val); in->bump(); return; }
     if (!strcmp(key, "favourite")) { fav_pick(in, atoi(val)); return; }
+    if (!strcmp(key, "random_patch")) {   // a random patch or performance from every loaded bank, never the current one
+        if (!press) return;
+        const int nb = bank_count(in);
+        int total = 0;
+        for (int b = 0; b < nb; b++) total += preset_count(in, b);
+        if (total < 2) return;
+        static std::mt19937 rng((unsigned)std::chrono::steady_clock::now().time_since_epoch().count());
+        for (int tries = 0; tries < 8; tries++) {
+            int k = (int)(rng() % (unsigned)total), b = 0;
+            while (k >= preset_count(in, b)) k -= preset_count(in, b++);
+            if (b != in->bank || k != in->preset) { select_sound(in, b, k); return; }
+        }
+        return;
+    }
     if (!strcmp(key, "init_patch")) { if (press) select_sound(in, in->bank, in->preset); return; }      // reload the stored preset
     if (!strcmp(key, "gain")) { in->gain = clampi(atoi(val), 10, 400); return; }
     if (!strcmp(key, "edit_part")) {
@@ -927,6 +979,7 @@ int eng_get(void *p, const char *key, char *buf, int n) {
         const int i = atoi(key + 10);
         return put(buf, n, "%s", i >= 0 && i < in->fav_count ? in->fav_name[i] : "-");
     }
+    if (!strcmp(key, "fav_pending_name")) { std::lock_guard<std::mutex> l(in->fm); return put(buf, n, "%s", in->fav_has_pending ? in->fav_pending_name.c_str() : ""); }
     if (!strcmp(key, "fav_text")) { std::lock_guard<std::mutex> l(in->fm); return put(buf, n, "FAVOURITES %d / %d", in->fav_count, kFavSlots); }
     if (!strcmp(key, "display_rev")) return put(buf, n, "%u", in->rev.load());
     if (!strcmp(key, "ready")) return put(buf, n, "%d", in->ready.load() ? 1 : 0);

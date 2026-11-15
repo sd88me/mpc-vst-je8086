@@ -187,6 +187,7 @@ public:
         if (t_pushing == index) return;          // the host echoing what the worker just told it
         const PSpec& s = g_pspecs[index];
         if (s.flags & (kUi | kReserved)) return;
+        if (index == kFavSave || (s.flags & kLocal)) { if (!loading_.load()) localChanged(index, plain); return; }   // +FAV opens the naming keyboard
         const long long prevAt = hostAt_[index].exchange(nowMs());   // the host's previous move of it (for "a turn": see PRESET below)
         if (loading_.load()) return;             // an MPC chunk is restoring values: the engine state follows as extra state
         if ((s.flags & kChoice) && get(kUiParam) > 0.5f)   // a pick from the open drawn list closes it
@@ -257,6 +258,7 @@ public:
         if (index < 0 || index >= kNumParams) return false;
         const PSpec& s = g_pspecs[index];
         char buf[128];
+        if (index == kFavName) { std::lock_guard<std::mutex> g(kbMu_); out = kbName_ + "_"; return true; }
         if (s.flags & kText) { out = engineGet(s.key, buf, sizeof buf) ? buf : ""; return true; }   // readouts and tile names
         if (s.flags & (kMomentary | kUi | kReserved)) { out = ""; return true; }
         return false;
@@ -273,6 +275,7 @@ public:
     {
         if (!data || !size) return;
         ignoreProgUntil_.store(nowMs() + 2000);   // the host re-picks the saved program after a project load: the project's sound wins
+        closeKeyboard(true);                      // a project saved with the keyboard open restored kb_open = 1: push it closed
         applyState(std::string(reinterpret_cast<const char*>(data), strnlen(reinterpret_cast<const char*>(data), size)));
     }
 
@@ -283,11 +286,86 @@ public:
         const std::string s(data, strnlen(data, size));
         if (!isState(s)) return false;
         ignoreProgUntil_.store(nowMs() + 2000);
+        closeKeyboard(true);
         applyState(s);
         return true;
     }
 
     std::atomic<bool> loading_{false};   // set around an MPC chunk load (wrapped effSetChunk)
+
+    // ---- the naming keyboard (+FAV, as Vavra / Profit-5) ------------------------------------------------------------------------
+    // +FAV: the engine takes the sound as it is now ("fav_begin"), the keyboard opens on its name (kb_open = 1, the skin shows it;
+    // fav_name is the typed text); SAVE stores it under that name ("fav_save_as"), CANCEL closes.
+    void localChanged(int index, float plain)
+    {
+        if (!(g_pspecs[index].flags & kMomentary) && index != kFavSave) return;   // kb_open / fav_name: set by the plugin only
+        if (plain < 0.5f) { held_[index].store(false); return; }
+        if (held_[index].exchange(true)) return;
+        release_[index].store(true);   // a momentary: back to 0 on the next worker pass
+        const long long now = nowMs();
+        if (now - lastFire_[(size_t)index] < 250) return;   // the second report of one tap
+        lastFire_[(size_t)index] = now;
+        if (index == kFavSave)
+        {
+            if (!engineReady()) return;
+            engineSet("fav_begin", "1");
+            char b[64];
+            std::string name = engineGet("fav_pending_name", b, sizeof b) ? b : "";
+            while (!name.empty() && name.back() == ' ') name.pop_back();
+            if (name.size() > (size_t)kFavNameMax) name.resize((size_t)kFavNameMax);
+            { std::lock_guard<std::mutex> g(kbMu_); kbName_ = name; kbShift_ = false; }
+            kbOpen_.store(true);
+            kbDirty_.store(true);
+            return;
+        }
+        if (index >= kKbFirst && index < kKbFirst + kKbCount)
+        {
+            if (!kbOpen_.load()) return;
+            const int k = index - kKbFirst, nchars = (int)sizeof kKbChars - 1;
+            if (k == nchars + 3) { closeKeyboard(); return; }   // CANCEL
+            if (k == nchars + 4) { saveTyped(); return; }       // SAVE
+            { std::lock_guard<std::mutex> g(kbMu_); typeKey(k); }
+            kbDirty_.store(true);
+        }
+    }
+
+    void typeKey(int k)   // kbMu_ held; k = 0 .. kKbCount - 1
+    {
+        const int nchars = (int)sizeof kKbChars - 1;
+        if (k <= nchars)   // a character or space
+        {
+            if ((int)kbName_.size() >= kFavNameMax) return;
+            char c = k < nchars ? kKbChars[k] : ' ';
+            const bool cap = kbName_.empty() || kbName_.back() == ' ';
+            if (c >= 'A' && c <= 'Z')
+            {
+                if (cap == kbShift_) c = (char)(c - 'A' + 'a');   // capital at the start and after a space; SHIFT flips the next letter
+                kbShift_ = false;
+            }
+            kbName_ += c;
+        }
+        else if (k == nchars + 1) { if (!kbName_.empty()) kbName_.pop_back(); }
+        else if (k == nchars + 2) kbShift_ = !kbShift_;
+    }
+
+    void closeKeyboard(bool always = false)
+    {
+        if (kbOpen_.exchange(false) || always) kbDirty_.store(true);
+    }
+
+    void saveTyped()
+    {
+        std::string name;
+        { std::lock_guard<std::mutex> g(kbMu_); name = kbName_; }
+        while (!name.empty() && name.back() == ' ') name.pop_back();
+        if (name.empty()) name = "Favourite";
+        closeKeyboard();
+        engineSet("fav_save_as", name.c_str());   // the favourite count changes: refreshFavNames renames the PRESET menu's entries
+    }
+
+    // test hooks
+    bool dbgKbOpen() const { return kbOpen_.load(); }
+    std::string dbgKbName() { std::lock_guard<std::mutex> g(kbMu_); return kbName_; }
     void requestResync() { resync_.store(true); }
 
 private:
@@ -442,6 +520,13 @@ private:
                 if (f >= 0 && f < kFavSlots && f != prog) { currentProgram_ = f; lastProgram_ = f; wantDisplay_ = true; }
             }
         }
+        if (kbDirty_.exchange(false))   // the keyboard opened or closed, or the typed name changed
+        {
+            pushValue(kKbOpen, kbOpen_.load() ? 1.0f : 0.0f);
+            counter_ = (counter_ + 1) % 1024;
+            pushValue(kFavName, (float)counter_);
+            wantDisplay_ = true;
+        }
         if (force || tick_ % 25 == 0) refreshFavNames();   // +FAV / -FAV (or another instance) changed the list: new names in the PRESET menu
         if (notifyUi_.exchange(false)) { t_pushing = kUiParam; notifyHostParameterChanged(kUiParam); t_pushing = -1; }
         if (resync_.exchange(false))
@@ -548,6 +633,11 @@ private:
     std::atomic<long long> pend0At_{0};
     std::atomic<float> pend0Value_{0.0f};
     std::atomic<bool>* held_ = nullptr;
+    std::mutex kbMu_;
+    std::string kbName_;                       // the name being typed on the keyboard
+    bool kbShift_ = false;
+    std::atomic<bool> kbOpen_{false}, kbDirty_{false};
+    std::vector<long long> lastFire_ = std::vector<long long>((size_t)kNumParams, 0);
     std::atomic<bool>* release_ = nullptr;
     std::atomic<bool>* hostMoved_ = nullptr;   // read this one back and tell the host on the next pass
     std::atomic<long long>* hostAt_ = nullptr; // when the host last moved it (ms), per parameter
@@ -613,4 +703,11 @@ extern "C" MPC_EXPORT AEffect* VSTPluginMain(audioMasterCallback host)
     if (e && !g_origDispatcher) g_origDispatcher = e->dispatcher;
     if (e) e->dispatcher = jeDispatcher;
     return e;
+}
+extern "C" MPC_EXPORT int je_dbg_kb_open(AEffect* e) { return static_cast<JE8086Plugin*>(e->object)->dbgKbOpen() ? 1 : 0; }
+extern "C" MPC_EXPORT int je_dbg_kb_name(AEffect* e, char* out, int n)
+{
+    const std::string s = static_cast<JE8086Plugin*>(e->object)->dbgKbName();
+    std::snprintf(out, (size_t)n, "%s", s.c_str());
+    return 1;
 }

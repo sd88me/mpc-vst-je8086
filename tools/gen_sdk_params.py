@@ -5,7 +5,7 @@ params.lock is the FROZEN VST order of the released 0.1.1 wrapper build (260 ind
 26 hidden "<key>__open" flags that build added, one per popup of vst/layout.conf. Saved projects and Q-Link assignments bind to these
 indices. This build keeps them: index 234 is ui_open (0 = closed, k + 1 = the pick-list of the k-th popup in params.lock),
 235..259 are inert reserved slots, and new parameters are only ever APPENDED (add them to APPENDED below and to params.lock).
-Favourites were engine keys already in 0.1.1 (favourite, fav_save, fav_delete, fav_text), so nothing is appended for them.
+Favourites were engine keys already in 0.1.1 (favourite, fav_save, fav_delete, fav_text), ; 0.2 appends RANDOM and the +FAV naming keyboard.
 """
 import json, os, sys
 
@@ -13,7 +13,16 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 P = json.load(open(os.path.join(ROOT, "vst", "params.json")))["params"]
 LOCK = [l.strip() for l in open(os.path.join(ROOT, "params.lock")) if l.strip()]
 NPOP = 26                        # popups in the released build
+KB_CHARS = "1234567890QWERTYUIOPASDFGHJKLZXCVBNM-"
 APPENDED = [                     # (key, name, min, max, default, flags) appended after the released 260, in this order
+    ("random_patch", "RANDOM", 0, 1, 0, 1 | 512),      # kMomentary | kNoAuto: the engine's verb, a random sound from every loaded bank (BANKS page)
+    # the naming keyboard for +FAV (Vavra's / Profit-5's): the typed name (a text readout), the keyboard's visibility, its keys (kLocal)
+    ("fav_name", "Favourite Name", 0, 1023, 0, 2 | 4096 | 512),
+    ("kb_open", "Keyboard", 0, 1, 0, 16 | 4096 | 512),
+] + [("kb_" + ("dash" if c == "-" else c.lower()), "Key " + c, 0, 1, 0, 1 | 4096 | 512) for c in KB_CHARS] + [
+    ("kb_space", "Key Space", 0, 1, 0, 1 | 4096 | 512), ("kb_bksp", "Key Delete", 0, 1, 0, 1 | 4096 | 512),
+    ("kb_shift", "Key Shift", 0, 1, 0, 1 | 4096 | 512), ("kb_cancel", "Key Cancel", 0, 1, 0, 1 | 4096 | 512),
+    ("kb_save", "Key Save", 0, 1, 0, 1 | 4096 | 512),
 ]
 RANGE = {}
 
@@ -95,6 +104,11 @@ out += ["", "static const PSpec g_pspecs[] = {"] + rows + ["};",
         "static const int kNumPopups = %d;" % len(popups),
         "static const int kFavourite = %d, kFavSave = %d, kFavDelete = %d, kFavText = %d, kFavSlots = 64;" % (idx["favourite"], idx["fav_save"], idx["fav_delete"], idx["fav_text"]),
         "static const int kKeyMode = %d, kArpSwitch = %d, kArpHold = %d;" % (idx["key_mode"], idx["arp_switch"], idx["arp_hold"]),
+        "static const int kRandom = %d;" % LOCK.index("random_patch"),
+        "static const int kFavName = %d, kKbOpen = %d, kKbFirst = %d, kKbCount = %d;" % (LOCK.index("fav_name"), LOCK.index("kb_open"),
+                                                                                      LOCK.index("kb_1"), len(KB_CHARS) + 5),
+        "static const char kKbChars[] = %s;   // the character keys from kKbFirst, then space, delete, shift, cancel, save" % json.dumps(KB_CHARS),
+        "static const int kFavNameMax = 20;",
         "static const int kFirstAppended = %d;     // engine keys appended after the released table follow the favourite keys" % (len(keys) + NPOP), ""]
 open(os.path.join(ROOT, "src", "params_gen.h"), "w").write("\n".join(out))
 print("src/params_gen.h: %d params (%d engine, ui_open, %d reserved, %d appended)" % (len(LOCK), len(P), len(popups) - 1, len(APPENDED)))

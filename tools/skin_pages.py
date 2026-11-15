@@ -58,6 +58,7 @@ class Page:
         self.kids, self.groups, self.qlink_rows, self.choices = [], [], [], {}
         self.sample, self.env_samples = {}, {}
         self.lcds = []
+        self.overlay = []          # shown over everything while kb_open = 1 (the +FAV naming keyboard)
 
     def inside(self, x, y):
         return any(r[0] - 2 <= x <= r[2] + 2 and r[1] - 2 <= y <= r[3] + 2 for r in self.lcds)
@@ -181,7 +182,7 @@ class Page:
     def tab(self):
         self.bgname = "bg_%s.png" % re.sub(r"[^a-z0-9]+", "_", self.name.lower()).strip("_")
         self.bg.save(os.path.join(SKINS, self.bgname))
-        kids = [tui.entry("bg", "Image", {"version": 2, "imageType": "Regular", "colour": "0", "image": self.bgname}, "0 0 1280 628")] + self.kids
+        kids = [tui.entry("bg", "Image", {"version": 2, "imageType": "Regular", "colour": "0", "image": self.bgname}, "0 0 1280 628")] + self.kids + self.overlay
         return {"version": 1, "tabName": self.key_name, "fnKeyIndex": self.fn, "fnKeySubIndex": self.sub,
                 "componentDefinition": tui.component(kids, background=tui.bg("ff1a2030")), "qlinkBoundsData": self.groups}
 
@@ -192,6 +193,48 @@ def fav_keys(p, x, y):
     p.value("fav_text", x - 6, y - 26, 220, 20, colour="ffff6a14", size=14.0, style="SemiBold", sample="FAVOURITES 3 / 64")
     p.momentary("fav_save", x, y, 96, 44, "+ FAV", size=16)
     p.momentary("fav_delete", x + 112, y, 96, 44, "- FAV", size=16)
+    keyboard(p)
+
+
+KB_ROWS = [("1234567890", ["kb_bksp"]), ("QWERTYUIOP", []), ("ASDFGHJKL-", []), ("ZXCVBNM", ["kb_space"])]
+
+
+def keyboard(p):
+    """The naming keyboard for +FAV (Vavra's / Profit-5's): a full-page panel, the name being typed in an LCD, 42 rubber keys;
+    shown while kb_open = 1, over everything else on the page (added last)."""
+    ind = ["IndexedEnabling/1/2/%s" % tui.P("kb_open")]
+    def make_panel():
+        img = art.chassis().convert("RGBA")
+        art.section(img, 16, 8, 1264, 620)
+        d = ImageDraw.Draw(img)
+        art.legend(d, 40, 34, "FAVOURITE NAME", 20, art.ORANGE, anchor="lm")
+        art.lcd_screen(img, 300, 14, 1240, 82)
+        return img.convert("RGB")
+    p.overlay.append(tui.entry("kb panel", "Image", {"version": 2, "imageType": "Regular", "colour": "0",
+                                                     "image": asset("kb_panel.png", make_panel)}, "0 0 1280 628", ind=ind))
+    lab = tui.label("Value", "320 22 900 52", remap=tui.P("fav_name"), just="left verticallyCentred", colour=LCD_TXT, style="Bold",
+                    h=40.0, case="Original")
+    lab["bounds"] = tui.bounds("320 22 900 52", ind=ind)
+    p.overlay.append(lab)
+    p.sample["fav_name$"] = "Trancer Lead_"
+    kw, kh, gap, x0, y0 = 98, 84, 8, 64, 104
+
+    def kbkey(k, cap, x, y, w, red=False):
+        on = asset("kb_%dx%d_on_%s%s.png" % (w, kh, slug(cap), "_r" if red else ""), lambda: art.key(w, kh, True, cap, led=False, red=red, size=26 if len(cap) == 1 else 19))
+        off = asset("kb_%dx%d_off_%s%s.png" % (w, kh, slug(cap), "_r" if red else ""), lambda: art.key(w, kh, False, cap, led=False, red=red, size=26 if len(cap) == 1 else 19))
+        p.overlay.append(tui.button(k, k, on, off, "%d %d %d %d" % (x - 6, y - 6, w + 12, kh + 12), focus="No", ind=ind))
+    for r, (chars, extra) in enumerate(KB_ROWS):
+        y = y0 + r * (kh + gap)
+        x = x0 + r * 30
+        for c in chars:
+            kbkey("kb_" + ("dash" if c == "-" else c.lower()), c, x, y, kw)
+            x += kw + gap
+        for k in extra:
+            kbkey(k, {"kb_bksp": "DELETE", "kb_space": "SPACE"}[k], x, y, 1216 - x)
+    y = y0 + 4 * (kh + gap)
+    kbkey("kb_shift", "SHIFT", x0, y, 220)
+    kbkey("kb_cancel", "CANCEL", 640 - 130, y, 260)
+    kbkey("kb_save", "SAVE", 1216 - 260, y, 260, red=True)
 
 
 def bank_patch_row(p, x0, x1, y0, y1, big=34.0, split=0.36):
@@ -327,6 +370,7 @@ def banks_page():
     p.momentary("patch_page_prev", 330, y, 130, 40, "< PAGE", size=14)
     p.value("patch_page_text", 470, y, 300, 40, colour=WHITE, size=17.0, sample="PAGE 1 / 4")
     p.momentary("patch_page_next", 780, y, 130, 40, "PAGE >", size=14)
+    p.momentary("random_patch", 1110, y - 4, 146, 48, "RANDOM", size=16, red=True)
     p.qlink_group((16, 92, 1268, 624), ["bank_index", "preset", "patch_page_prev", "patch_page_next"])
     return p
 

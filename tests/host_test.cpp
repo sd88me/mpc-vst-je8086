@@ -102,6 +102,10 @@ static std::vector<uint8_t> chunk(AEffect* e)
 
 
 static void tap(AEffect* e, int i, int blocks = 300) { e->setParameter(e, i, 1.0f); settle(e, blocks); e->setParameter(e, i, 0.0f); settle(e, 20); }
+extern "C" int je_dbg_kb_open(AEffect* e);
+extern "C" int je_dbg_kb_name(AEffect* e, char* out, int n);
+static void key(AEffect* e, const char* k) { std::this_thread::sleep_for(std::chrono::milliseconds(260)); tap(e, idx(k), 20); je_dbg_tick(e); }
+static std::string kbName(AEffect* e) { char b[64] = {}; je_dbg_kb_name(e, b, sizeof b); return b; }
 
 int main(int argc, char** argv)
 {
@@ -116,7 +120,7 @@ int main(int argc, char** argv)
     a->dispatcher(a, effGetEffectName, 0, 0, name, 0);
     CHECK(a->uniqueID == (VstInt32)0x4a453836, "uid JE86 (%08x)", (unsigned)a->uniqueID);
     CHECK(!std::strcmp(name, JE_EXPECT_NAME), "name \"%s\"", name);
-    CHECK(a->numParams == 260, "260 params, as 0.1.1 (%d)", a->numParams);
+    CHECK(a->numParams == kNumParams && kNumParams == 305, "305 params: 0.1.1's 260 + RANDOM + the naming keyboard (%d)", a->numParams);
     CHECK(a->numPrograms == 64, "64 programs = the favourite slots (%d)", a->numPrograms);
     {
         int bad = 0, i = 0;
@@ -131,7 +135,7 @@ int main(int argc, char** argv)
             i++;
         }
         if (f) std::fclose(f);
-        CHECK(f && bad == 0 && i == 260, "order = params.lock (%d keys, %d differ)", i, bad);
+        CHECK(f && bad == 0 && i == kNumParams, "order = params.lock (%d keys, %d differ)", i, bad);
         CHECK(!std::strcmp(g_pspecs[0].key, "bank_index") && !std::strcmp(g_pspecs[234].key, "ui_open"), "0 = bank_index, 234 = ui_open");
     }
     CHECK(waitReady(a), "booted (%s)", eng(a, "loading_status").c_str());
@@ -218,10 +222,18 @@ int main(int argc, char** argv)
         settle(a, 300);
         const std::string fav0 = eng(a, "fav_text");
         tap(a, FSAVE, 300);
-        settle(a, 60);
+        je_dbg_tick(a);
+        CHECK(je_dbg_kb_open(a) == 1 && !kbName(a).empty() && a->getParameter(a, kKbOpen) > 0.5f, "+FAV opens the keyboard on the sound's name \"%s\"", kbName(a).c_str());
+        CHECK(eng(a, "fav_text") == fav0, "nothing stored until SAVE");
+        for (int i = 0; i < 24 && !kbName(a).empty(); i++) key(a, "kb_bksp");
+        key(a, "kb_m"); key(a, "kb_y"); key(a, "kb_space"); key(a, "kb_p"); key(a, "kb_shift"); key(a, "kb_a"); key(a, "kb_1");
+        CHECK(kbName(a) == "My PA1", "typing: capital at the start and after a space, SHIFT flips one (\"%s\")", kbName(a).c_str());
+        key(a, "kb_save");
+        settle(a, 60); je_dbg_tick(a);
+        CHECK(je_dbg_kb_open(a) == 0 && a->getParameter(a, kKbOpen) < 0.5f, "SAVE closes the keyboard");
         char pn[64] = {};
         a->dispatcher(a, effGetProgramNameIndexed, 0, 0, pn, 0);
-        CHECK(eng(a, "fav_text") != fav0 && std::strncmp(pn, "1 --", 4) != 0, "+FAV stores it (%s; program 1 \"%s\")", eng(a, "fav_text").c_str(), pn);
+        CHECK(eng(a, "fav_text") != fav0 && !std::strcmp(pn, "1 My PA1"), "SAVE stores it under the typed name (%s; program 1 \"%s\")", eng(a, "fav_text").c_str(), pn);
         a->setParameter(a, NEXT, 1.0f); settle(a, 400);   // another sound
         a->setParameter(a, NEXT, 0.0f); settle(a, 20);
         CHECK(engi(a, "key_mode") != 2 || engi(a, "cutoff") != 33, "another sound is loaded");
@@ -233,6 +245,19 @@ int main(int argc, char** argv)
         settle(a, 60);
         a->dispatcher(a, effGetProgramNameIndexed, 0, 0, pn, 0);
         CHECK(eng(a, "fav_text") == fav0, "-FAV removes it (%s; program 1 \"%s\")", eng(a, "fav_text").c_str(), pn);
+        tap(a, FSAVE, 300); je_dbg_tick(a);
+        key(a, "kb_cancel");
+        settle(a, 60);
+        CHECK(je_dbg_kb_open(a) == 0 && eng(a, "fav_text") == fav0, "CANCEL closes without storing (%s)", eng(a, "fav_text").c_str());
+    }
+
+    std::printf("== RANDOM\n");
+    {
+        const int b0 = engi(a, "bank_index"), p0 = engi(a, "preset");
+        tap(a, kRandom, 400); je_dbg_tick(a);
+        const int b1 = engi(a, "bank_index"), p1 = engi(a, "preset");
+        CHECK(b1 != b0 || p1 != p0, "RANDOM loads another sound (%d/%d -> %d/%d \"%s\")", b0, p0, b1, p1, disp(a, PNAME).c_str());
+        CHECK(a->getParameter(a, kRandom) == 0.f, "RANDOM dropped back to 0");
     }
 
     std::printf("== state round trip\n");
