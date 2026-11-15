@@ -16,7 +16,7 @@ import make_tui as tui
 
 SKINS = tui.OUT
 _made = set()
-KD = 66                    # knob diameter
+KD = 84                    # knob diameter
 LCD_TXT = "ff46ff6e"       # live LCD text
 WHITE = "ffececec"
 
@@ -88,7 +88,7 @@ class Page:
         if opts:
             self.choices[key] = opts
         if name:
-            self.legend(cx, cy - D // 2 - 30, name, 14)
+            self.legend(cx, cy - int(D * 0.5) - 20, name, 14)   # the face is ~0.72 D; the scale ring at 0.5 D + 3
         art.knob_scale(self.d, cx, cy, D * 0.5 + 3, bip)
         comp = "knob%d%s" % (D, "r" if red else "")
         tui.need_slider(comp, asset("knob_%d%s.png" % (D, "r" if red else ""), lambda: art.knob_strip(D, red)), D, D, "Vertical")
@@ -106,7 +106,7 @@ class Page:
         art.fader_slot(self.bg, cx, y0, y1, bipolar=bip)
         if name:
             self.legend(cx, y0 - 30, name, 15)
-        cw = 40
+        cw = 54
         ch = art.fader_cap(cw, red).height
         h = y1 - y0 + ch
         comp = "fader%dx%d%s" % (cw, h, "r" if red else "")
@@ -275,7 +275,7 @@ def knob_row(p, x0, x1, cy, ctl, red=(), D=KD):
 def knob_block(p, x0, y0, x1, y1, title, ctl, extra_q=(), red=()):
     """A section of up to four knobs in a row = one Q-Link group."""
     p.section(x0, y0, x1, y1, title, q=True)
-    knob_row(p, x0 + 6, x1 - 6, y0 + 92, ctl, red)
+    knob_row(p, x0 + 6, x1 - 6, y0 + 104, ctl, red)
     p.qlink_group((x0, y0, x1, y1), [c[0] for c in ctl] + list(extra_q))
 
 
@@ -317,7 +317,7 @@ def main_page():
                                                ("osc_balance", "BALANCE", .5), ("lfo1_rate", "LFO1 RATE", .6)])
     p.section(16, 432, 512, 620, "AMP ENVELOPE", q=True)
     for i, (k, nm, s) in enumerate([("amp_attack", "A", .05), ("amp_decay", "D", .5), ("amp_sustain", "S", .8), ("amp_release", "R", .3)]):
-        p.fader(k, 84 + i * 112, 492, 580, nm, s)
+        p.fader(k, 84 + i * 112, 500, 570, nm, s)
     p.qlink_group((16, 432, 512, 620), ["amp_attack", "amp_decay", "amp_sustain", "amp_release"])
     knob_block(p, 524, 432, 1020, 620, "EFFECTS", [("chorus_level", "CHORUS", .3), ("delay_time", "DELAY TIME", .5),
                                                    ("delay_feedback", "FEEDBACK", .3), ("delay_level", "DELAY LEVEL", .3)])
@@ -394,8 +394,8 @@ def osc_page():
     p.section(772, 92, 1264, 356, "OSC 2", q=True)
     p.segments("osc2_waveform", 788, 128, 120, 26, labels=["SQUARE", "SAW", "TRIANGLE", "NOISE"], cols=1, gap=0, row_gap=6, size=12)
     p.toggle("osc2_sync", 788, 270, 120, 34, "SYNC")
-    knob_row(p, 912, 1260, 200, [("osc2_range", "RANGE", .5), ("osc2_fine", "FINE / WIDE", .5)], D=56)
-    knob_row(p, 912, 1260, 300, [("osc2_ctrl1", "CTRL 1", .4), ("osc2_ctrl2", "CTRL 2", .5)], D=56)
+    knob_row(p, 912, 1260, 200, [("osc2_range", "RANGE", .5), ("osc2_fine", "FINE / WIDE", .5)], D=64)
+    knob_row(p, 912, 1260, 300, [("osc2_ctrl1", "CTRL 1", .4), ("osc2_ctrl2", "CTRL 2", .5)], D=64)
     p.qlink_group((772, 92, 1264, 356), ["osc2_range", "osc2_fine", "osc2_ctrl1", "osc2_ctrl2"])
     # OSC COMMON
     p.section(16, 368, 1264, 620, "OSC COMMON", q=True)
@@ -415,14 +415,14 @@ def filter_page():
     p = Page("FILTER / AMP", "FILTER", 3)
     header(p)
     p.section(16, 92, 760, 356, "FILTER", q=True)
-    knob_row(p, 22, 590, 178, [("cutoff", "CUTOFF FREQ", .6), ("resonance", "RESONANCE", .2), ("key_follow", "KEY FOLLOW", .5)], red=("cutoff",), D=56)
-    knob_row(p, 22, 590, 296, [("filter_lfo1_depth", "LFO1 DEPTH", .5), ("filter_lfo2_depth", "LFO2 DEPTH", .5), ("filter_env_depth", "ENV DEPTH", .7)], D=56)
+    knob_row(p, 22, 590, 178, [("cutoff", "CUTOFF FREQ", .6), ("resonance", "RESONANCE", .2), ("key_follow", "KEY FOLLOW", .5)], red=("cutoff",), D=64)
+    knob_row(p, 22, 590, 296, [("filter_lfo1_depth", "LFO1 DEPTH", .5), ("filter_lfo2_depth", "LFO2 DEPTH", .5), ("filter_env_depth", "ENV DEPTH", .7)], D=64)
     p.segments("filter_type", 610, 132, 136, 34, labels=["HPF", "BPF", "LPF"], cols=1, row_gap=8, sel=2, size=13)
     p.segments("cutoff_slope", 610, 272, 136, 34, labels=["-12 dB", "-24 dB"], cols=1, row_gap=8, sel=1, size=13)
     p.qlink_group((16, 92, 760, 356), ["cutoff", "resonance", "key_follow", "filter_env_depth"])
     p.section(772, 92, 1264, 356, "AMP", q=True)
-    knob_row(p, 778, 1100, 178, [("amp_level", "LEVEL", .8), ("amp_lfo1_depth", "LFO1 / PAN", .5)], D=56)
-    knob_row(p, 778, 1100, 296, [("amp_lfo2_depth", "LFO2 DEPTH", .5), ("gain", "GAIN %", .23)], D=56)
+    knob_row(p, 778, 1100, 178, [("amp_level", "LEVEL", .8), ("amp_lfo1_depth", "LFO1 / PAN", .5)], D=64)
+    knob_row(p, 778, 1100, 296, [("amp_lfo2_depth", "LFO2 DEPTH", .5), ("gain", "GAIN %", .23)], D=64)
     p.legend(1180, 124, "LFO 1 MODE", 13, art.ORANGE)
     p.segments("amp_lfo1_mode", 1116, 148, 132, 34, labels=["OFF", "AUTO", "MANUAL"], cols=1, row_gap=8, size=13)
     p.qlink_group((772, 92, 1264, 356), ["amp_level", "amp_lfo1_depth", "amp_lfo2_depth", "gain"])
@@ -504,14 +504,14 @@ def perform_page():
     p.section(16, 92, 630, 356, "KEY MODE", q=True)
     p.segments("key_mode", 36, 130, 576, 36, gap=10, size=14)
     p.segments("edit_part", 36, 178, 576, 36, labels=["UPPER", "LOWER", "UPPER & LOWER"], gap=10, size=14)
-    knob_row(p, 22, 624, 284, [("split_point", "SPLIT POINT", .45), ("part_detune", "PART DETUNE", .5)], D=56)
+    knob_row(p, 22, 624, 284, [("split_point", "SPLIT POINT", .45), ("part_detune", "PART DETUNE", .5)], D=72)
     p.qlink_group((16, 92, 630, 356), ["split_point", "part_detune", "key_mode", "edit_part"])
     p.section(642, 92, 1264, 356, "VOICES / OUTPUT", q=True)
     p.lcd(662, 136, 950, 196)
     p.lcd_param("voice_assign", 662, 136, 288, 60, "VOICE ASSIGN (UPPER-LOWER)", "8-2", size=22.0)
     p.legend(1100, 128, "OUTPUT", 14, art.ORANGE)
     p.segments("output_assign", 972, 152, 270, 40, labels=["MIX", "PARALLEL"], gap=10, size=14)
-    knob_row(p, 648, 1258, 284, [("up_transpose", "UPPER TRANSPOSE", .5), ("lo_transpose", "LOWER TRANSPOSE", .5)], D=56)
+    knob_row(p, 648, 1258, 284, [("up_transpose", "UPPER TRANSPOSE", .5), ("lo_transpose", "LOWER TRANSPOSE", .5)], D=72)
     p.qlink_group((642, 92, 1264, 356), ["voice_assign", "up_transpose", "lo_transpose", "output_assign"])
     p.section(16, 368, 1264, 620, "ARPEGGIATOR / RPS", q=True)
     p.toggle("arp_switch", 40, 420, 110, 44, "ON")
@@ -581,7 +581,7 @@ def assign_pages(title, fn):
             p.section(16, y0, 1264, y0 + 124, None, q=True)
             for c, k in enumerate(row):
                 cx = 16 + 156 + c * 312
-                p.knob(k, cx - 90, y0 + 70, "", .5, D=58, show_value=False)
+                p.knob(k, cx - 90, y0 + 70, "", .5, D=70, show_value=False)
                 art.legend(p.d, cx - 48, y0 + 44, nice(k[len(pre):]), 14, art.INK, anchor="la")
                 p.value(k, cx - 48, y0 + 64, 160, 26, just="left verticallyCentred", colour="ffff6a14", size=22.0, sample="+0")
             p.qlink_group((16, y0, 1264, y0 + 124), row)

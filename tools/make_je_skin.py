@@ -99,7 +99,9 @@ def knob_strip(D, red=False):
     strip = Image.new("RGBA", (D, D * 128), (0, 0, 0, 0))
     for i in range(128):
         c, r = i % 16, i // 16
-        strip.paste(src.crop((c * 210, r * 210, c * 210 + 210, r * 210 + 210)).resize((D, D), Image.LANCZOS), (0, i * D))
+        # the knob face is 116 px of the 210 px frame (shadow and padding round it): crop to 160 px so it fills the box
+        x, y = c * 210, r * 210
+        strip.paste(src.crop((x + 25, y + 25, x + 185, y + 185)).resize((D, D), Image.LANCZOS), (0, i * D))
     return strip
 
 
@@ -123,6 +125,7 @@ def fader_cap(w, red=False):
     k = (w, red)
     if k not in _CAP:
         c = Image.open(os.path.join(JT, "slider2.png" if red else "slider.png")).convert("RGBA")
+        c = c.crop((27, 17, 129, 117))   # the cap is 78 x 72 of the 165 x 140 image: keep a little of its shadow
         _CAP[k] = c.resize((w, int(c.height * w / c.width)), Image.LANCZOS)
     return _CAP[k]
 
