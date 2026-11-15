@@ -217,7 +217,7 @@ def render_preview(page, tab_names, active, qlink_group=0, keyboard=False):
             pts = page.env_samples.get(cd["name"])
             if pts:
                 P_ = [(x + px * w, y + (1 - py) * h) for px, py in pts]
-                d.line(P_, fill=(26, 32, 8), width=3)
+                d.line(P_, fill=(70, 255, 110), width=3)
                 for q in P_:
                     d.ellipse([q[0] - 8, q[1] - 8, q[0] + 8, q[1] + 8], outline=(26, 32, 8), width=2, fill=(196, 220, 88))
         elif typ.startswith("lcdfield"):

@@ -313,8 +313,9 @@ def main_page():
     fav_keys(p, 1048, 40)
     p.momentary("all_notes_off", 1048, 112, 96, 44, "PANIC", size=15, red=True)
     p.momentary("init_patch", 1160, 112, 96, 44, "RELOAD", size=15)
-    p.legend(1110, 182, "GAIN %", 13, art.INK_DIM)
-    p.value("gain", 1150, 174, 100, 24, just="left verticallyCentred", colour="ffb4bccc", size=17.0, sample="100")
+    p.momentary("init_sound", 1048, 168, 96, 44, "INIT", size=15)
+    p.legend(1208, 168, "GAIN %", 13, art.INK_DIM)
+    p.value("gain", 1160, 186, 96, 24, colour="ffb4bccc", size=17.0, sample="100")
     # quick edit: filter and oscillator knobs, amp envelope faders, effects
     knob_block(p, 16, 240, 512, 420, "FILTER", [("cutoff", "CUTOFF", .6), ("resonance", "RESONANCE", .2),
                                                 ("filter_env_depth", "ENV DEPTH", .7), ("key_follow", "KEY FOLLOW", .5)], red=("cutoff",))
@@ -441,25 +442,42 @@ def filter_page():
 
 
 def env_page():
-    """ENVELOPES: the pitch, filter and amp envelopes as long faders, as on the panel's bottom row."""
+    """ENVELOPES: a live graph over each ADSR (drag its handles, as on JV-880 2.0), short faders under it as on the panel's bottom
+    row; the pitch envelope (depth, A, D) as a big DEPTH knob over two faders."""
     p = Page("ENVELOPES", "ENV", 4)
-    Y0, Y1 = Y(196), Y(560)
-    blocks = [(16, 300, "PITCH ENV", [("pitch_env_depth", "DEPTH", .5), ("pitch_env_attack", "A", .1), ("pitch_env_decay", "D", .3)]),
-              (312, 788, "FILTER ENV", [("filter_env_depth", "DEPTH", .7), ("filter_attack", "A", .05), ("filter_decay", "D", .45),
-                                        ("filter_sustain", "S", .4), ("filter_release", "R", .3)]),
-              (800, 1264, "AMP ENV", [("amp_attack", "A", .05), ("amp_decay", "D", .5), ("amp_sustain", "S", .8), ("amp_release", "R", .3)])]
-    for x0, x1, title, ctl in blocks:
-        p.section(x0, Y(92), x1, Y(620), title, q=True)
+    GY0, GY1 = 52, 272                      # graph windows
+    FY0, FY1 = 372, 548                     # faders
+    # PITCH ENV
+    p.section(16, 8, 300, 620, "PITCH ENV", q=True)
+    p.knob("pitch_env_depth", 158, 170, "DEPTH", .5, red=True, D=110)
+    art.bracket(p.d, 60, 256, 300, "ENVELOPE")
+    for i, (k, nm, sm) in enumerate([("pitch_env_attack", "A", .1), ("pitch_env_decay", "D", .3)]):
+        p.fader(k, 100 + i * 116, FY0, FY1, nm, sm)
+    p.qlink_group((16, 8, 300, 620), ["pitch_env_depth", "pitch_env_attack", "pitch_env_decay"])
+    blocks = [(312, 788, "FILTER ENV", "filter", [("filter_attack", "A", .05), ("filter_decay", "D", .45), ("filter_sustain", "S", .4),
+                                                  ("filter_release", "R", .3)]),
+              (800, 1264, "AMP ENV", "amp", [("amp_attack", "A", .05), ("amp_decay", "D", .5), ("amp_sustain", "S", .8), ("amp_release", "R", .3)])]
+    for x0, x1, title, kind, ctl in blocks:
+        p.section(x0, 8, x1, 620, title, q=True)
+        gx1 = x1 - 20
+        if kind == "filter":            # DEPTH beside the graph
+            gx1 = x1 - 130
+            p.knob("filter_env_depth", x1 - 66, 170, "DEPTH", .7, red=True, D=84)
+        p.lcd(x0 + 20, GY0, gx1, GY1)
+        keys = [c[0] for c in ctl]
+        name = kind + " env"
+        p.kids.append(tui.entry(name, "Envelope", tui.envelope([("attackHandle", tui.P(keys[0])), ("decayHandle", tui.P(keys[1])),
+                                                                ("sustainHandle", tui.P(keys[2])), ("releaseHandle", tui.P(keys[3]))],
+                                                               name, line=LCD_TXT, accent="ff1a5a24"),
+                                "%d %d %d %d" % (x0 + 32, GY0 + 14, gx1 - x0 - 44, GY1 - GY0 - 28), focus="Yes"))
+        p.env_samples[name] = [(0, 0), (.15, 1), (.4, .55), (.72, .55), (.95, 0)]
         n = len(ctl)
         step = (x1 - x0 - 20) / n
         xs = [int(x0 + 10 + step * (i + 0.5)) for i in range(n)]
-        adsr = [i for i, c in enumerate(ctl) if c[1] in "ADSR" and len(c[1]) == 1]
-        if adsr:
-            art.bracket(p.d, xs[adsr[0]] - 30, xs[adsr[-1]] + 30, Y(146), "ENVELOPE")
-        for i, (k, nm, s) in enumerate(ctl):
-            p.fader(k, xs[i], Y0, Y1, nm, s, red=nm == "DEPTH")
-        keys = [c[0] for c in ctl]
-        p.qlink_group((x0, Y(92), x1, Y(620)), keys[-4:] if len(keys) > 4 else keys)
+        art.bracket(p.d, xs[0] - 30, xs[-1] + 30, 300, "ENVELOPE")
+        for i, (k, nm, sm) in enumerate(ctl):
+            p.fader(k, xs[i], FY0, FY1, nm, sm)
+        p.qlink_group((x0, 8, x1, 620), keys)
     return p
 
 

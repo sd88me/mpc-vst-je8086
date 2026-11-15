@@ -23,6 +23,7 @@ APPENDED = [                     # (key, name, min, max, default, flags) appende
     ("kb_space", "Key Space", 0, 1, 0, 1 | 4096 | 512), ("kb_bksp", "Key Delete", 0, 1, 0, 1 | 4096 | 512),
     ("kb_shift", "Key Shift", 0, 1, 0, 1 | 4096 | 512), ("kb_cancel", "Key Cancel", 0, 1, 0, 1 | 4096 | 512),
     ("kb_save", "Key Save", 0, 1, 0, 1 | 4096 | 512),
+    ("init_sound", "INIT", 0, 1, 0, 1 | 512),         # kMomentary | kNoAuto: the engine's verb, a plain starting sound (MAIN)
 ]
 RANGE = {}
 

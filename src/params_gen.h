@@ -351,8 +351,9 @@ static const PSpec g_pspecs[] = {
     {"kb_shift", "Key Shift", 0.0f, 1.0f, 0.0f, 4609, nullptr, 0, -1, 0.0f},
     {"kb_cancel", "Key Cancel", 0.0f, 1.0f, 0.0f, 4609, nullptr, 0, -1, 0.0f},
     {"kb_save", "Key Save", 0.0f, 1.0f, 0.0f, 4609, nullptr, 0, -1, 0.0f},
+    {"init_sound", "INIT", 0.0f, 1.0f, 0.0f, 513, nullptr, 0, -1, 0.0f},
 };
-static const int kNumParams = 305;
+static const int kNumParams = 306;
 static const int kNumEngineParams = 234;   // 0 .. this - 1 are the engine's keys
 static const int kUiParam = 234;            // ui_open: 0 closed, k + 1 = pick-list of g_popups[k]
 static const int kNumPopups = 26;

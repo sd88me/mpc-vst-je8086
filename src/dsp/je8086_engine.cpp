@@ -834,6 +834,7 @@ void restore_state(Inst *in, const char *s) {
     select_sound(in, in->bank, in->preset);
 }
 
+void init_sound(Inst *in);
 void eng_set(void *p, const char *key, const char *val) {
     Inst *in = (Inst *)p;
     if (!in || !key || !val) return;
@@ -892,6 +893,7 @@ void eng_set(void *p, const char *key, const char *val) {
         }
         return;
     }
+    if (!strcmp(key, "init_sound")) { if (press) init_sound(in); return; }
     if (!strcmp(key, "init_patch")) { if (press) select_sound(in, in->bank, in->preset); return; }      // reload the stored preset
     if (!strcmp(key, "gain")) { in->gain = clampi(atoi(val), 10, 400); return; }
     if (!strcmp(key, "edit_part")) {
@@ -911,6 +913,27 @@ void eng_set(void *p, const char *key, const char *val) {
         v += q->vmin;
     }
     write_param(in, q, clampi(v, q->vmin, q->vmax));
+}
+
+/* INIT: a plain starting sound on both parts (the panel's own part setting is kept): one saw, LPF -24 dB fully open, an organ amp
+ * envelope, every modulation depth, CONTROL and VELOCITY assign at 0, effects off. Key mode and the rest of the performance stay. */
+void init_sound(Inst *in) {
+    static const struct { const char *key; int v; } over[] = {
+        {"osc1_waveform", 5}, {"osc2_waveform", 1}, {"osc_balance", -64}, {"osc_shift", 2}, {"lfo1_rate", 64}, {"lfo2_rate", 64},
+        {"filter_type", 2}, {"cutoff_slope", 1}, {"cutoff", 127}, {"filter_sustain", 127}, {"amp_level", 100}, {"amp_sustain", 127},
+        {"amp_release", 8}, {"bend_up", 2}, {"bend_down", -2}, {"chorus_type", 0}, {"delay_type", 0}};
+    const int old = in->part.exchange(2);
+    for (int i = 0; i < JP_PARAM_COUNT; i++) {
+        const jp_param_t *q = &jp_params[i];
+        if (q->area != JP_AREA_PATCH) continue;
+        int v = clampi(0, q->vmin, q->vmax);
+        for (const auto &o : over) if (!strcmp(o.key, q->key)) v = o.v;
+        write_param(in, q, clampi(v, q->vmin, q->vmax));
+    }
+    in->part = old;
+    { std::lock_guard<std::mutex> l(in->sm); in->cur_name = "INIT"; }
+    in->load_gen++;                       // not a stored favourite any more
+    in->bump();
 }
 
 int put(char *buf, int n, const char *fmt, ...) {

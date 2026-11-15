@@ -120,7 +120,7 @@ int main(int argc, char** argv)
     a->dispatcher(a, effGetEffectName, 0, 0, name, 0);
     CHECK(a->uniqueID == (VstInt32)0x4a453836, "uid JE86 (%08x)", (unsigned)a->uniqueID);
     CHECK(!std::strcmp(name, JE_EXPECT_NAME), "name \"%s\"", name);
-    CHECK(a->numParams == kNumParams && kNumParams == 305, "305 params: 0.1.1's 260 + RANDOM + the naming keyboard (%d)", a->numParams);
+    CHECK(a->numParams == kNumParams && kNumParams == 306, "306 params: 0.1.1's 260 + RANDOM + the naming keyboard + INIT (%d)", a->numParams);
     CHECK(a->numPrograms == 64, "64 programs = the favourite slots (%d)", a->numPrograms);
     {
         int bad = 0, i = 0;
@@ -252,6 +252,15 @@ int main(int argc, char** argv)
         key(a, "kb_cancel");
         settle(a, 60);
         CHECK(je_dbg_kb_open(a) == 0 && eng(a, "fav_text") == fav0, "CANCEL closes without storing (%s)", eng(a, "fav_text").c_str());
+    }
+
+    std::printf("== INIT\n");
+    {
+        a->setParameter(a, CUT, norm(CUT, 20)); settle(a, 200);
+        tap(a, idx("init_sound"), 300); je_dbg_tick(a);
+        CHECK(engi(a, "cutoff") == 127 && engi(a, "osc1_waveform") == 5 && engi(a, "amp_sustain") == 127 && std::lround(plainOf(a, CUT)) == 127,
+              "INIT: a plain saw, filter open (cutoff %d, osc1 wave %d, amp sustain %d, host cutoff %.0f)", engi(a, "cutoff"),
+              engi(a, "osc1_waveform"), engi(a, "amp_sustain"), plainOf(a, CUT));
     }
 
     std::printf("== RANDOM\n");
