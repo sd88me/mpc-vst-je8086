@@ -147,6 +147,10 @@ struct Inst {
 
     /* UI side */
     std::atomic<int> bank{0}, preset{0}, page{0}, bank_page{0}, gain{100}, part{2};   // part: 0 UPPER, 1 LOWER, 2 BOTH (the default: edits reach both parts)
+    /* the host's transport (HAS_SONG_POS, as Vavra): the arpeggiator, delay / chorus / LFO sync follow MPC's tempo through
+     * gearmulator's MIDI clock (the system's MIDI SYNC is on) */
+    std::atomic<double> host_bpm{0.0}, host_ppq{-1.0};
+    std::atomic<bool> host_playing{false};
     std::atomic<uint32_t> load_gen{0};                      // bumped by every sound load: a favourite stays "current" until the next one
     /* favourites (MPC's native program list, vst.json "programs": favourite): whole temp performances, from any bank, in <dir>/favourites.dat */
     std::mutex fm;
@@ -331,6 +335,10 @@ Msg temp_request() {
     return Msg(d.begin(), d.end());
 }
 
+const jp_param_t *find_param(const char *key);
+void write_param(Inst *in, const jp_param_t *q, int value);
+int read_param(Inst *in, const jp_param_t *q, int *value);
+
 void emu_main(Inst *in) {
     tune_thread("JEhost");
     in->set_status("Looking for the JP-8000 ROM...");
@@ -446,10 +454,29 @@ void emu_main(Inst *in) {
                 break;
             }
         }
+        {   // MPC's tempo into the performance TEMPO (20..250), so the readout and a stopped transport follow it too
+            static thread_local int sent_bpm = -1;
+            const double hb = in->host_bpm.load();
+            const int b = hb > 0 ? std::min(250, std::max(20, (int)std::lround(hb))) : -1;
+            if (b > 0 && b != sent_bpm && in->ready) {
+                sent_bpm = b;
+                if (const jp_param_t *q = find_param("tempo")) {
+                    int cur = -1;
+                    if (read_param(in, q, &cur) != 0 || cur != b) write_param(in, q, b);
+                }
+            }
+        }
         if (reread) request_temp();
         if (temp_wait >= 0 && ++temp_wait > 2000) { xlog("[temp] no full reply (0x%x), asking again", temp_rx); request_temp(); }
 
-        plugin->process(inputs, outputs, kBlock, 0.0f, 0.0f, false);
+        {
+            /* MPC's position, moved forward by what the ring holds: this block is heard that much later */
+            const double bpm = in->host_bpm.load(), ppq = in->host_ppq.load();
+            const uint32_t ahead = in->wr.load(std::memory_order_relaxed) - in->rd.load(std::memory_order_relaxed);
+            const bool sync = bpm > 0.0 && ppq >= 0.0 && in->ready;
+            const double my_ppq = sync ? ppq + ahead * bpm / 60.0 / kRate : 0.0;
+            plugin->process(inputs, outputs, kBlock, sync ? (float)bpm : 0.0f, (float)my_ppq, sync && in->host_playing.load());
+        }
         block_no++;
 
         midiOut.clear();
@@ -1059,7 +1086,16 @@ void eng_render(void *p, int16_t *out, int frames) {
     }
 }
 
-const mpc_engine_t engine = {eng_create, eng_destroy, eng_midi, eng_set, eng_get, eng_render, nullptr, nullptr};
+void eng_song_pos(void *p, double ppq, double bpm, int playing, int frames) {
+    (void)frames;
+    Inst *in = (Inst *)p;
+    if (!in) return;
+    in->host_ppq = ppq;
+    in->host_bpm = bpm;
+    in->host_playing = playing != 0;
+}
+
+const mpc_engine_t engine = {eng_create, eng_destroy, eng_midi, eng_set, eng_get, eng_render, nullptr, eng_song_pos};
 
 }  // namespace
 

@@ -25,8 +25,17 @@ static std::atomic<int> g_automate[kNumParams];
 static std::atomic<int> g_updateDisplay{0};
 static int g_fail = 0;
 
+static double g_bpm = 0, g_samples = 0;   // a fake transport: playing at g_bpm when > 0
+static VstTimeInfo g_ti;
 static VstIntPtr host(AEffect*, VstInt32 op, VstInt32 idx, VstIntPtr, void*, float)
 {
+    if (op == audioMasterGetTime && g_bpm > 0)
+    {
+        g_ti = VstTimeInfo();
+        g_ti.sampleRate = 44100; g_ti.samplePos = g_samples; g_ti.tempo = g_bpm; g_ti.ppqPos = g_samples / 44100.0 * g_bpm / 60.0;
+        g_ti.flags = kVstTransportPlaying | kVstTempoValid | kVstPpqPosValid;
+        return (VstIntPtr)&g_ti;
+    }
     if (op == audioMasterAutomate && idx >= 0 && idx < kNumParams) g_automate[idx]++;
     if (op == audioMasterVersion) return 2400;
     if (op == audioMasterUpdateDisplay) g_updateDisplay++;
@@ -52,7 +61,7 @@ static void run(AEffect* e, int blocks, const std::vector<std::vector<uint8_t>>&
     std::vector<float> L((size_t)frames), R((size_t)frames);
     float* out[2] = {L.data(), R.data()};
     double acc = 0; long n = 0;
-    for (int b = 0; b < blocks; b++)
+    for (int b = 0; b < blocks; b++, g_samples += frames)
     {
         if (b == 0 && !midi.empty())
         {
@@ -261,6 +270,15 @@ int main(int argc, char** argv)
         CHECK(engi(a, "cutoff") == 127 && engi(a, "osc1_waveform") == 5 && engi(a, "amp_sustain") == 127 && std::lround(plainOf(a, CUT)) == 127,
               "INIT: a plain saw, filter open (cutoff %d, osc1 wave %d, amp sustain %d, host cutoff %.0f)", engi(a, "cutoff"),
               engi(a, "osc1_waveform"), engi(a, "amp_sustain"), plainOf(a, CUT));
+    }
+
+    std::printf("== tempo sync\n");
+    {
+        const int t0 = engi(a, "tempo");
+        g_bpm = t0 == 93 ? 97 : 93;
+        for (int i = 0; i < 60 && engi(a, "tempo") != (int)g_bpm; i++) settle(a, 100);
+        CHECK(engi(a, "tempo") == (int)g_bpm, "TEMPO follows MPC's tempo (%d -> %d, host %.0f)", t0, engi(a, "tempo"), g_bpm);
+        g_bpm = 0;
     }
 
     std::printf("== RANDOM\n");

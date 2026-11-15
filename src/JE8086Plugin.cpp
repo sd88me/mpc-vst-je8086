@@ -162,6 +162,12 @@ public:
         float* L = ctx.outputs[0];
         float* R = ctx.numOutputs > 1 ? ctx.outputs[1] : nullptr;
         int frame = 0, mi = 0;
+        if (eng_->song_pos)   // MPC's tempo and position every block (Vavra's): the arpeggiator and synced effects follow it
+        {
+            const mpc::Transport& t = ctx.transport;
+            const bool ok = t.ppqValid && t.tempoValid && t.bpm > 0;
+            eng_->song_pos(inst_, ok ? t.ppqPos : -1.0, ok ? t.bpm : 0.0, t.playing ? 1 : 0, ctx.numFrames);
+        }
         while (frame < ctx.numFrames)
         {
             while (mi < ctx.numMidiEvents && ctx.midi[mi].sampleOffset <= frame)
