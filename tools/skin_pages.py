@@ -288,71 +288,63 @@ def knob_row(p, x0, x1, cy, ctl, red=(), D=KD):
         p.knob(k, int(x0 + step * (i + 0.5)), cy, nm, s, red=k in red, D=D)
 
 
-def knob_block(p, x0, y0, x1, y1, title, ctl, extra_q=(), red=()):
+def knob_block(p, x0, y0, x1, y1, title, ctl, extra_q=(), red=(), D=KD, cy=None):
     """A section of up to four knobs in a row = one Q-Link group."""
     p.section(x0, y0, x1, y1, title, q=True)
-    knob_row(p, x0 + 6, x1 - 6, y0 + 104, ctl, red)
+    knob_row(p, x0 + 6, x1 - 6, cy or y0 + 104, ctl, red, D=D)
     p.qlink_group((x0, y0, x1, y1), [c[0] for c in ctl] + list(extra_q))
 
 
 # ---------------------------------------------------------------------------------------------------------------------------
 def main_page():
-    """MAIN: one combined LCD (bank | patch on top; KEY MODE, PANEL, VOICES, TEMPO, ARP fields; status line), the quick-edit
-    knobs and the amp envelope faders as four Q-Link blocks, the play-mode keys on the right."""
+    """MAIN: the wordmark with PANIC and GAIN under it; one LCD (bank | patch, status); +FAV / -FAV, RELOAD, INIT. Below: the
+    play-mode keys (KEY MODE, PANEL, ARPEGGIATOR, VELOCITY) on the left, the FILTER and OSC knobs in the middle, the amp envelope
+    as long faders on the right. Each block is a Q-Link group."""
     p = Page("MAIN", "MAIN", 0)
     w = art.wordmark(62)
-    p.bg.paste(w, (14, 18), w)
-    # the combined LCD
-    X0, Y0, X1, Y1 = 290, 16, 1010, 222
+    p.bg.paste(w, (14, 16), w)
+    p.momentary("all_notes_off", 20, 94, 110, 44, "PANIC", size=15, red=True)
+    p.legend(150, 98, "GAIN %", 13, art.INK_DIM, anchor="la")
+    p.value("gain", 150, 114, 110, 26, just="left verticallyCentred", colour="ffb4bccc", size=20.0, sample="100")
+    # the LCD: bank and patch, status
+    X0, Y0, X1, Y1 = 290, 16, 1010, 142
     p.lcd(X0, Y0, X1, Y1)
-    bank_patch_row(p, X0, X1, Y0, Y0 + 66, big=34.0)
-    art.lcd_rule(p.d, X0 + 8, X1 - 8, Y0 + 70)
-    fields = [("key_mode", "KEY MODE", "SINGLE"), ("edit_part", "PANEL", "BOTH"), ("voice_assign", "VOICES", "8-2"),
-              ("tempo", "TEMPO", "120"), ("arp_mode", "ARPEGGIO", "UP")]
-    fw = (X1 - X0) // len(fields)
-    for i, (k, cap, smp) in enumerate(fields):
-        fx = X0 + i * fw
-        if i:
-            art.lcd_vrule(p.d, fx, Y0 + 80, Y0 + 140)
-        p.lcd_param(k, fx + 4, Y0 + 74, fw - 8, 70, cap, smp)
-    art.lcd_rule(p.d, X0 + 8, X1 - 8, Y0 + 148)
-    p.value("loading_status", X0 + 14, Y0 + 154, 330, 46, just="left verticallyCentred", colour=LCD_TXT, size=18.0, style="Medium",
+    bank_patch_row(p, X0, X1, Y0, Y0 + 72, big=36.0)
+    art.lcd_rule(p.d, X0 + 8, X1 - 8, Y0 + 78)
+    p.value("loading_status", X0 + 14, Y0 + 82, 330, 40, just="left verticallyCentred", colour=LCD_TXT, size=18.0, style="Medium",
             case="Original", sample="Ready - ROM loaded")
-    p.value("engine_stats", X0 + 360, Y0 + 154, X1 - X0 - 374, 46, just="right verticallyCentred", colour=LCD_TXT, size=18.0,
+    p.value("engine_stats", X0 + 360, Y0 + 82, X1 - X0 - 374, 40, just="right verticallyCentred", colour=LCD_TXT, size=18.0,
             style="Medium", case="Original", sample="DROPOUTS 0   CPU 50%")
-    # right of the LCD: favourites, PANIC, reload
-    fav_keys(p, 1048, 40)
-    p.momentary("all_notes_off", 1048, 112, 96, 44, "PANIC", size=15, red=True)
-    p.momentary("init_patch", 1160, 112, 96, 44, "RELOAD", size=15)
-    p.momentary("init_sound", 1048, 168, 96, 44, "INIT", size=15)
-    p.legend(1208, 168, "GAIN %", 13, art.INK_DIM)
-    p.value("gain", 1160, 186, 96, 24, colour="ffb4bccc", size=17.0, sample="100")
-    # quick edit: filter and oscillator knobs, amp envelope faders, effects
-    knob_block(p, 16, 240, 512, 420, "FILTER", [("cutoff", "CUTOFF", .6), ("resonance", "RESONANCE", .2),
-                                                ("filter_env_depth", "ENV DEPTH", .7), ("key_follow", "KEY FOLLOW", .5)], red=("cutoff",))
-    knob_block(p, 524, 240, 1020, 420, "OSC", [("osc1_ctrl1", "OSC1 CTRL 1", .4), ("osc1_ctrl2", "OSC1 CTRL 2", .5),
-                                               ("osc_balance", "BALANCE", .5), ("lfo1_rate", "LFO1 RATE", .6)])
-    p.section(16, 432, 512, 620, "AMP ENVELOPE", q=True)
-    env_graph(p, "amp", ["amp_attack", "amp_decay", "amp_sustain", "amp_release"], 36, 478, 492, 584)
-    for i, (k, nm) in enumerate([("amp_attack", "A"), ("amp_decay", "D"), ("amp_sustain", "S"), ("amp_release", "R")]):
-        x = 36 + i * 114
-        p.legend(x + 20, 596, nm, 15, art.ORANGE, anchor="la")
-        p.value(k, x + 40, 588, 70, 28, just="left verticallyCentred", colour="ffb4bccc", size=18.0, sample=["6", "64", "102", "38"][i])
-    p.qlink_group((16, 432, 512, 620), ["amp_attack", "amp_decay", "amp_sustain", "amp_release"])
-    knob_block(p, 524, 432, 1020, 620, "EFFECTS", [("chorus_level", "CHORUS", .3), ("delay_time", "DELAY TIME", .5),
-                                                   ("delay_feedback", "FEEDBACK", .3), ("delay_level", "DELAY LEVEL", .3)])
-    # play-mode keys (the panel's KEY MODE / PANEL SELECT / ARPEGGIATOR)
-    RX, RW = 1036, 228
-    p.section(RX - 4, 240, RX + RW + 4, 620)
-    p.legend(RX + RW // 2, 250, "KEY MODE", 14, art.ORANGE)
-    yb = p.segments("key_mode", RX + 8, 276, RW - 16, 40, gap=8, size=13)
-    p.legend(RX + RW // 2, yb + 14, "PANEL", 14, art.ORANGE)
-    yb = p.segments("edit_part", RX + 8, yb + 40, RW - 16, 40, gap=8, size=13, sel=2)
-    p.legend(RX + RW // 2, yb + 14, "ARPEGGIATOR", 14, art.ORANGE)
-    p.toggle("arp_switch", RX + 8, yb + 40, (RW - 24) // 2, 44, "ON")
-    p.toggle("arp_hold", RX + 16 + (RW - 24) // 2, yb + 40, (RW - 24) // 2, 44, "HOLD")
-    p.legend(RX + RW // 2, yb + 104, "VELOCITY", 14, art.ORANGE)
-    p.toggle("velocity_switch", RX + 8, yb + 130, RW - 16, 40, "VELOCITY")
+    fav_keys(p, 1048, 36)
+    p.momentary("init_patch", 1048, 98, 96, 44, "RELOAD", size=15)
+    p.momentary("init_sound", 1160, 98, 96, 44, "INIT", size=15)
+    # left: play-mode keys (the panel's KEY MODE / PANEL SELECT / ARPEGGIATOR)
+    RX, RW, TOP = 20, 256, 158
+    p.section(16, TOP, 284, 620)
+    p.legend(RX + RW // 2, TOP + 14, "KEY MODE", 14, art.ORANGE)
+    yb = p.segments("key_mode", RX + 8, TOP + 42, RW - 16, 46, gap=8, size=13)
+    p.legend(RX + RW // 2, yb + 18, "PANEL", 14, art.ORANGE)
+    yb = p.segments("edit_part", RX + 8, yb + 44, RW - 16, 46, gap=8, size=13, sel=2)
+    half = (RW - 24) // 2
+    p.legend(RX + RW // 2, yb + 18, "ARPEGGIATOR", 14, art.ORANGE)
+    p.toggle("arp_switch", RX + 8, yb + 44, half, 46, "ON")
+    p.toggle("arp_hold", RX + 16 + half, yb + 44, half, 46, "HOLD")
+    p.legend(RX + RW // 2, yb + 108, "SOLO", 14, art.ORANGE)
+    p.toggle("mono", RX + 8, yb + 134, half, 46, "MONO")
+    p.toggle("legato", RX + 16 + half, yb + 134, half, 46, "LEGATO")
+    p.legend(RX + RW // 2, yb + 198, "VELOCITY", 14, art.ORANGE)
+    p.toggle("velocity_switch", RX + 8, yb + 224, RW - 16, 46, "VELOCITY")
+    # middle: filter and oscillator knobs
+    knob_block(p, 296, TOP, 900, 386, "FILTER", [("cutoff", "CUTOFF", .6), ("resonance", "RESONANCE", .2),
+                                                 ("filter_env_depth", "ENV DEPTH", .7), ("key_follow", "KEY FOLLOW", .5)], red=("cutoff",),
+               D=104, cy=TOP + 124)
+    knob_block(p, 296, 392, 900, 620, "OSC", [("osc1_ctrl1", "OSC1 CTRL 1", .4), ("osc1_ctrl2", "OSC1 CTRL 2", .5),
+                                              ("osc_balance", "BALANCE", .5), ("lfo1_rate", "LFO1 RATE", .6)], D=104, cy=392 + 124)
+    # right: the amp envelope, long faders
+    p.section(912, TOP, 1264, 620, "AMP ENVELOPE", q=True)
+    for i, (k, nm, sm) in enumerate([("amp_attack", "A", .05), ("amp_decay", "D", .5), ("amp_sustain", "S", .8), ("amp_release", "R", .3)]):
+        p.fader(k, 960 + i * 85, 242, 552, nm, sm)
+    p.qlink_group((912, TOP, 1264, 620), ["amp_attack", "amp_decay", "amp_sustain", "amp_release"])
     return p
 
 
