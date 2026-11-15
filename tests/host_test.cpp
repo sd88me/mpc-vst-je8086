@@ -237,8 +237,11 @@ int main(int argc, char** argv)
         a->setParameter(a, NEXT, 1.0f); settle(a, 400);   // another sound
         a->setParameter(a, NEXT, 0.0f); settle(a, 20);
         CHECK(engi(a, "key_mode") != 2 || engi(a, "cutoff") != 33, "another sound is loaded");
+        for (int i = 0; i < 50 && engi(a, "favourite") == 0; i++) settle(a, 20);   // the load lands (favourite 1 is no longer current)
+        je_dbg_tick(a);                                   // the worker follows it (program = the first empty slot)
         a->dispatcher(a, effSetProgram, 0, 0, nullptr, 0);   // the MPC's PRESET menu, favourite 1
         settle(a, 400);
+        for (int i = 0; i < 100 && !(engi(a, "key_mode") == 2 && engi(a, "cutoff") == 33); i++) settle(a, 20);   // slow under ASan
         je_dbg_tick(a);
         CHECK(engi(a, "key_mode") == 2 && engi(a, "cutoff") == 33, "picking favourite 1 brings it back (key mode %d, cutoff %d)", engi(a, "key_mode"), engi(a, "cutoff"));
         tap(a, FDEL, 300);
@@ -258,6 +261,7 @@ int main(int argc, char** argv)
         const int b1 = engi(a, "bank_index"), p1 = engi(a, "preset");
         CHECK(b1 != b0 || p1 != p0, "RANDOM loads another sound (%d/%d -> %d/%d \"%s\")", b0, p0, b1, p1, disp(a, PNAME).c_str());
         CHECK(a->getParameter(a, kRandom) == 0.f, "RANDOM dropped back to 0");
+        settle(a, 400); je_dbg_tick(a);   // let the load land before the next section edits the sound
     }
 
     std::printf("== state round trip\n");
