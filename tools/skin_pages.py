@@ -298,7 +298,7 @@ def knob_block(p, x0, y0, x1, y1, title, ctl, extra_q=(), red=(), D=KD, cy=None)
 # ---------------------------------------------------------------------------------------------------------------------------
 def main_page():
     """MAIN: the wordmark with PANIC and GAIN under it; one LCD (bank | patch, status); +FAV / -FAV, RELOAD, INIT. Below: the
-    play-mode keys (KEY MODE, PANEL, ARPEGGIATOR, VELOCITY) on the left, the FILTER and OSC knobs in the middle, the amp envelope
+    play-mode keys (KEY MODE, PANEL, ARPEGGIATOR, SOLO, VELOCITY) on the left, the FILTER and EFFECTS knobs in the middle, the amp envelope
     as long faders on the right. Each block is a Q-Link group."""
     p = Page("MAIN", "MAIN", 0)
     w = art.wordmark(62)
@@ -334,12 +334,12 @@ def main_page():
     p.toggle("legato", RX + 16 + half, yb + 134, half, 46, "LEGATO")
     p.legend(RX + RW // 2, yb + 198, "VELOCITY", 14, art.ORANGE)
     p.toggle("velocity_switch", RX + 8, yb + 224, RW - 16, 46, "VELOCITY")
-    # middle: filter and oscillator knobs
+    # middle: filter and effects knobs
     knob_block(p, 296, TOP, 900, 386, "FILTER", [("cutoff", "CUTOFF", .6), ("resonance", "RESONANCE", .2),
                                                  ("filter_env_depth", "ENV DEPTH", .7), ("key_follow", "KEY FOLLOW", .5)], red=("cutoff",),
                D=104, cy=TOP + 124)
-    knob_block(p, 296, 392, 900, 620, "OSC", [("osc1_ctrl1", "OSC1 CTRL 1", .4), ("osc1_ctrl2", "OSC1 CTRL 2", .5),
-                                              ("osc_balance", "BALANCE", .5), ("lfo1_rate", "LFO1 RATE", .6)], D=104, cy=392 + 124)
+    knob_block(p, 296, 392, 900, 620, "EFFECTS", [("chorus_level", "CHORUS", .3), ("delay_time", "DELAY TIME", .5),
+                                                  ("delay_feedback", "FEEDBACK", .3), ("delay_level", "DELAY LEVEL", .3)], D=104, cy=392 + 124)
     # right: the amp envelope, long faders
     p.section(912, TOP, 1264, 620, "AMP ENVELOPE", q=True)
     for i, (k, nm, sm) in enumerate([("amp_attack", "A", .05), ("amp_decay", "D", .5), ("amp_sustain", "S", .8), ("amp_release", "R", .3)]):
