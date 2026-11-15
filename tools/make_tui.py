@@ -44,7 +44,8 @@ def dump(v, ind=0):
 def bounds(b, focus="No", visible="Always", ind=None):
     d = {"version": 1, "acceptsHWFocus": focus, "showWhenDataModelInvalid": "Show", "whenVisible": visible,
          "boundsType": "Absolute", "bounds": b}
-    if ind:   # shown only while a parameter has a given value (Vavra's naming keyboard: "IndexedEnabling/1/2/Parameter <kb_open>")
+    if ind:   # bounds version 2 reads additionalInvalidatingHandles (version 1 ignores it: the keyboard showed for good). Shown only while a parameter has a given value (Vavra's naming keyboard: "IndexedEnabling/1/2/Parameter <kb_open>")
+        d["version"] = 2
         d["additionalInvalidatingHandles"] = ind
     return d
 
