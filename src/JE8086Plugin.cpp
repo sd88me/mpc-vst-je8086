@@ -120,10 +120,11 @@ public:
         lastPos_.assign(n, -1.0f);
         textHash_.assign(n, 0u);
 
-        // The engine reads <data dir>/roms/ and keeps banks/ and favourites.dat there; 1.x's data dir was <plugin folder>/je8086
-        // (MODULE_SUBDIR). (Not mpc::contentPath(): a function-local static std::string.)
+        // The engine reads <data dir>/roms/ and keeps banks/ and favourites.dat there. The data dir stays where 0.1.1 had it, next to
+        // the .so: <plugin folder>/VST/je8086 (1.x's MODULE_SUBDIR), so an upgrade keeps the ROM and favourites. (Not
+        // mpc::contentPath(): a function-local static std::string.)
         const std::string folder = mpc::detail::computePluginFolder();
-        dataDir_ = folder + "/je8086";
+        dataDir_ = folder + "/VST/je8086";
         eng_ = mpc_engine();
         inst_ = eng_->create(dataDir_.c_str());
         for (int i = 0; i < kFavSlots; ++i) addProgram((std::to_string(i + 1) + " --").c_str(), {});

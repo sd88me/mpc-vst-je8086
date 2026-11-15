@@ -22,7 +22,7 @@ g++ $S -Wall -Wextra -DJE_TEST -DJE_NAME="\"$N\"" -I"$SDK/framework" -I"$MV/wrap
 g++ $S -DJE_EXPECT_NAME="\"$N\"" -I"$SDK/framework" -Isrc -c tests/host_test.cpp -o "$T/host_test.o"
 g++ $S -o "$T/jetest" "$T/plugin.o" "$T/host_test.o" -Wl,--start-group $libs -Wl,--end-group -ldl -lm
 pf="$(mktemp -d)"; trap 'rm -rf "$pf"' EXIT
-mkdir -p "$pf/je8086"; cp -r "$ROMS" "$pf/je8086/roms"; cp plugin.json "$pf/"
+mkdir -p "$pf/VST/je8086"; cp -r "$ROMS" "$pf/VST/je8086/roms"; cp plugin.json "$pf/"
 set +e
 MPC_PLUGIN_FOLDER="$pf" ASAN_OPTIONS=detect_leaks=1 "$T/jetest" tests/data/legacy-0.1.1.chunk > "$T/log.txt" 2>&1
 st=$?
