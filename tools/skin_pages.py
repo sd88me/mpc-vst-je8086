@@ -256,12 +256,17 @@ def bank_patch_row(p, x0, x1, y0, y1, big=34.0, split=0.36):
 
 
 def header(p):
-    """Every page but MAIN: the wordmark, the slim LCD with bank and patch, +FAV / -FAV."""
+    """BANKS (the browser): the wordmark, the slim LCD with bank and patch, +FAV / -FAV. The edit pages have no header: more room for controls."""
     w = art.wordmark(54)
     p.bg.paste(w, (14, 14), w)
     p.lcd(262, 16, 1010, 70)
     bank_patch_row(p, 262, 1010, 16, 70, big=30.0)
     fav_keys(p, 1048, 28)
+
+
+def Y(v):
+    """The pages without the patch display: the old y (content from 92 under the header) stretched over 8 .. 620."""
+    return int(round(8 + (v - 92) * 612 / 528))
 
 
 def knob_row(p, x0, x1, cy, ctl, red=(), D=KD):
@@ -378,34 +383,33 @@ def banks_page():
 def osc_page():
     """OSC: LFO 1, OSC 1, OSC 2 and OSC COMMON, as on the panel's top-left (waveform keys with LEDs, knobs)."""
     p = Page("OSC", "OSC", 2)
-    header(p)
     # LFO 1
-    p.section(16, 92, 300, 356, "LFO 1", q=True)
-    p.segments("lfo1_waveform", 30, 132, 256, 34, labels=["TRI", "SAW", "SQR", "S/H"], gap=6, size=13)
-    knob_row(p, 22, 294, 262, [("lfo1_rate", "RATE", .6), ("lfo1_fade", "FADE", 0)])
-    p.qlink_group((16, 92, 300, 356), ["lfo1_rate", "lfo1_fade", "lfo1_waveform"])
+    p.section(16, Y(92), 300, Y(356), "LFO 1", q=True)
+    p.segments("lfo1_waveform", 30, Y(132), 256, 34, labels=["TRI", "SAW", "SQR", "S/H"], gap=6, size=13)
+    knob_row(p, 22, 294, Y(262), [("lfo1_rate", "RATE", .6), ("lfo1_fade", "FADE", 0)], D=96)
+    p.qlink_group((16, Y(92), 300, Y(356)), ["lfo1_rate", "lfo1_fade", "lfo1_waveform"])
     # OSC 1
-    p.section(312, 92, 760, 356, "OSC 1", q=True)
-    p.segments("osc1_waveform", 328, 128, 190, 26, labels=["SUPER SAW", "TRIANGLE MOD", "NOISE", "FEEDBACK OSC", "SQUARE", "SAW", "TRIANGLE"],
+    p.section(312, Y(92), 760, Y(356), "OSC 1", q=True)
+    p.segments("osc1_waveform", 328, Y(128), 190, 26, labels=["SUPER SAW", "TRIANGLE MOD", "NOISE", "FEEDBACK OSC", "SQUARE", "SAW", "TRIANGLE"],
                cols=1, gap=0, row_gap=6, size=12)
-    knob_row(p, 520, 756, 252, [("osc1_ctrl1", "CTRL 1", .4), ("osc1_ctrl2", "CTRL 2", .5)])
-    p.qlink_group((312, 92, 760, 356), ["osc1_ctrl1", "osc1_ctrl2", "osc1_waveform"])
+    knob_row(p, 520, 756, Y(252), [("osc1_ctrl1", "CTRL 1", .4), ("osc1_ctrl2", "CTRL 2", .5)], D=96)
+    p.qlink_group((312, Y(92), 760, Y(356)), ["osc1_ctrl1", "osc1_ctrl2", "osc1_waveform"])
     # OSC 2
-    p.section(772, 92, 1264, 356, "OSC 2", q=True)
-    p.segments("osc2_waveform", 788, 128, 120, 26, labels=["SQUARE", "SAW", "TRIANGLE", "NOISE"], cols=1, gap=0, row_gap=6, size=12)
-    p.toggle("osc2_sync", 788, 270, 120, 34, "SYNC")
-    knob_row(p, 912, 1260, 200, [("osc2_range", "RANGE", .5), ("osc2_fine", "FINE / WIDE", .5)], D=64)
-    knob_row(p, 912, 1260, 300, [("osc2_ctrl1", "CTRL 1", .4), ("osc2_ctrl2", "CTRL 2", .5)], D=64)
-    p.qlink_group((772, 92, 1264, 356), ["osc2_range", "osc2_fine", "osc2_ctrl1", "osc2_ctrl2"])
+    p.section(772, Y(92), 1264, Y(356), "OSC 2", q=True)
+    p.segments("osc2_waveform", 788, Y(128), 120, 26, labels=["SQUARE", "SAW", "TRIANGLE", "NOISE"], cols=1, gap=0, row_gap=6, size=12)
+    p.toggle("osc2_sync", 788, Y(270), 120, 34, "SYNC")
+    knob_row(p, 912, 1260, Y(192), [("osc2_range", "RANGE", .5), ("osc2_fine", "FINE / WIDE", .5)], D=74)
+    knob_row(p, 912, 1260, Y(310), [("osc2_ctrl1", "CTRL 1", .4), ("osc2_ctrl2", "CTRL 2", .5)], D=74)
+    p.qlink_group((772, Y(92), 1264, Y(356)), ["osc2_range", "osc2_fine", "osc2_ctrl1", "osc2_ctrl2"])
     # OSC COMMON
-    p.section(16, 368, 1264, 620, "OSC COMMON", q=True)
-    knob_row(p, 22, 820, 470, [("osc_balance", "OSC BALANCE", .5), ("cross_mod_depth", "X-MOD DEPTH", 0),
-                               ("osc_lfo1_depth", "LFO1 DEPTH", .5), ("osc_shift", "OSC SHIFT", .5)])
-    p.legend(1030, 400, "RING", 14, art.ORANGE)
-    p.toggle("ring_mod", 960, 424, 140, 40, "RING MOD")
-    p.legend(1030, 488, "LFO 1 & ENV DEST", 14, art.ORANGE)
-    p.segments("lfo1_env_dest", 840, 514, 400, 40, labels=["OSC 1+2", "OSC 2", "X-MOD"], gap=8, size=13)
-    p.qlink_group((16, 368, 1264, 620), ["osc_balance", "cross_mod_depth", "osc_lfo1_depth", "osc_shift"])
+    p.section(16, Y(368), 1264, Y(620), "OSC COMMON", q=True)
+    knob_row(p, 22, 820, Y(470), [("osc_balance", "OSC BALANCE", .5), ("cross_mod_depth", "X-MOD DEPTH", 0),
+                               ("osc_lfo1_depth", "LFO1 DEPTH", .5), ("osc_shift", "OSC SHIFT", .5)], D=96)
+    p.legend(1030, Y(400), "RING", 14, art.ORANGE)
+    p.toggle("ring_mod", 960, Y(424), 140, 40, "RING MOD")
+    p.legend(1030, Y(488), "LFO 1 & ENV DEST", 14, art.ORANGE)
+    p.segments("lfo1_env_dest", 840, Y(514), 400, 40, labels=["OSC 1+2", "OSC 2", "X-MOD"], gap=8, size=13)
+    p.qlink_group((16, Y(368), 1264, Y(620)), ["osc_balance", "cross_mod_depth", "osc_lfo1_depth", "osc_shift"])
     return p
 
 
@@ -413,129 +417,125 @@ def filter_page():
     """FILTER / AMP: the filter (type, slope keys, cutoff, resonance, key follow, LFO 1 depth), the amp (level, LFO mode),
     MODULATION (LFO 2) and the tone control."""
     p = Page("FILTER / AMP", "FILTER", 3)
-    header(p)
-    p.section(16, 92, 760, 356, "FILTER", q=True)
-    knob_row(p, 22, 590, 178, [("cutoff", "CUTOFF FREQ", .6), ("resonance", "RESONANCE", .2), ("key_follow", "KEY FOLLOW", .5)], red=("cutoff",), D=64)
-    knob_row(p, 22, 590, 296, [("filter_lfo1_depth", "LFO1 DEPTH", .5), ("filter_lfo2_depth", "LFO2 DEPTH", .5), ("filter_env_depth", "ENV DEPTH", .7)], D=64)
-    p.segments("filter_type", 610, 132, 136, 34, labels=["HPF", "BPF", "LPF"], cols=1, row_gap=8, sel=2, size=13)
-    p.segments("cutoff_slope", 610, 272, 136, 34, labels=["-12 dB", "-24 dB"], cols=1, row_gap=8, sel=1, size=13)
-    p.qlink_group((16, 92, 760, 356), ["cutoff", "resonance", "key_follow", "filter_env_depth"])
-    p.section(772, 92, 1264, 356, "AMP", q=True)
-    knob_row(p, 778, 1100, 178, [("amp_level", "LEVEL", .8), ("amp_lfo1_depth", "LFO1 / PAN", .5)], D=64)
-    knob_row(p, 778, 1100, 296, [("amp_lfo2_depth", "LFO2 DEPTH", .5), ("gain", "GAIN %", .23)], D=64)
-    p.legend(1180, 124, "LFO 1 MODE", 13, art.ORANGE)
-    p.segments("amp_lfo1_mode", 1116, 148, 132, 34, labels=["OFF", "AUTO", "MANUAL"], cols=1, row_gap=8, size=13)
-    p.qlink_group((772, 92, 1264, 356), ["amp_level", "amp_lfo1_depth", "amp_lfo2_depth", "gain"])
-    p.section(16, 368, 760, 620, "MODULATION (LFO 2)", q=True)
-    knob_row(p, 22, 560, 480, [("lfo2_rate", "RATE", .5), ("pitch_lfo2_depth", "PITCH DEPTH", .5), ("filter_lfo2_depth", "FILTER DEPTH", .5)])
-    p.legend(660, 400, "DEPTH SELECT", 13, art.ORANGE)
-    p.segments("lfo2_depth_select", 580, 424, 160, 34, labels=["PITCH", "FILTER", "AMP"], cols=1, row_gap=8, size=13)
-    p.qlink_group((16, 368, 760, 620), ["lfo2_rate", "pitch_lfo2_depth", "filter_lfo2_depth", "lfo2_depth_select"])
-    p.section(772, 368, 1264, 620, "TONE CONTROL", q=True)
-    knob_row(p, 778, 1258, 480, [("tone_bass", "BASS", .5), ("tone_treble", "TREBLE", .5)])
-    p.qlink_group((772, 368, 1264, 620), ["tone_bass", "tone_treble"])
+    p.section(16, Y(92), 760, Y(356), "FILTER", q=True)
+    knob_row(p, 22, 590, Y(178), [("cutoff", "CUTOFF FREQ", .6), ("resonance", "RESONANCE", .2), ("key_follow", "KEY FOLLOW", .5)], red=("cutoff",), D=74)
+    knob_row(p, 22, 590, Y(296), [("filter_lfo1_depth", "LFO1 DEPTH", .5), ("filter_lfo2_depth", "LFO2 DEPTH", .5), ("filter_env_depth", "ENV DEPTH", .7)], D=74)
+    p.segments("filter_type", 610, Y(132), 136, 34, labels=["HPF", "BPF", "LPF"], cols=1, row_gap=8, sel=2, size=13)
+    p.segments("cutoff_slope", 610, Y(272), 136, 34, labels=["-12 dB", "-24 dB"], cols=1, row_gap=8, sel=1, size=13)
+    p.qlink_group((16, Y(92), 760, Y(356)), ["cutoff", "resonance", "key_follow", "filter_env_depth"])
+    p.section(772, Y(92), 1264, Y(356), "AMP", q=True)
+    knob_row(p, 778, 1100, Y(178), [("amp_level", "LEVEL", .8), ("amp_lfo1_depth", "LFO1 / PAN", .5)], D=74)
+    knob_row(p, 778, 1100, Y(296), [("amp_lfo2_depth", "LFO2 DEPTH", .5), ("gain", "GAIN %", .23)], D=74)
+    p.legend(1180, Y(124), "LFO 1 MODE", 13, art.ORANGE)
+    p.segments("amp_lfo1_mode", 1116, Y(148), 132, 34, labels=["OFF", "AUTO", "MANUAL"], cols=1, row_gap=8, size=13)
+    p.qlink_group((772, Y(92), 1264, Y(356)), ["amp_level", "amp_lfo1_depth", "amp_lfo2_depth", "gain"])
+    p.section(16, Y(368), 760, Y(620), "MODULATION (LFO 2)", q=True)
+    knob_row(p, 22, 560, Y(480), [("lfo2_rate", "RATE", .5), ("pitch_lfo2_depth", "PITCH DEPTH", .5), ("filter_lfo2_depth", "FILTER DEPTH", .5)], D=96)
+    p.legend(660, Y(400), "DEPTH SELECT", 13, art.ORANGE)
+    p.segments("lfo2_depth_select", 580, Y(424), 160, 34, labels=["PITCH", "FILTER", "AMP"], cols=1, row_gap=8, size=13)
+    p.qlink_group((16, Y(368), 760, Y(620)), ["lfo2_rate", "pitch_lfo2_depth", "filter_lfo2_depth", "lfo2_depth_select"])
+    p.section(772, Y(368), 1264, Y(620), "TONE CONTROL", q=True)
+    knob_row(p, 778, 1258, Y(480), [("tone_bass", "BASS", .5), ("tone_treble", "TREBLE", .5)], D=96)
+    p.qlink_group((772, Y(368), 1264, Y(620)), ["tone_bass", "tone_treble"])
     return p
 
 
 def env_page():
     """ENVELOPES: the pitch, filter and amp envelopes as long faders, as on the panel's bottom row."""
     p = Page("ENVELOPES", "ENV", 4)
-    header(p)
-    Y0, Y1 = 196, 560
+    Y0, Y1 = Y(196), Y(560)
     blocks = [(16, 300, "PITCH ENV", [("pitch_env_depth", "DEPTH", .5), ("pitch_env_attack", "A", .1), ("pitch_env_decay", "D", .3)]),
               (312, 788, "FILTER ENV", [("filter_env_depth", "DEPTH", .7), ("filter_attack", "A", .05), ("filter_decay", "D", .45),
                                         ("filter_sustain", "S", .4), ("filter_release", "R", .3)]),
               (800, 1264, "AMP ENV", [("amp_attack", "A", .05), ("amp_decay", "D", .5), ("amp_sustain", "S", .8), ("amp_release", "R", .3)])]
     for x0, x1, title, ctl in blocks:
-        p.section(x0, 92, x1, 620, title, q=True)
+        p.section(x0, Y(92), x1, Y(620), title, q=True)
         n = len(ctl)
         step = (x1 - x0 - 20) / n
         xs = [int(x0 + 10 + step * (i + 0.5)) for i in range(n)]
         adsr = [i for i, c in enumerate(ctl) if c[1] in "ADSR" and len(c[1]) == 1]
         if adsr:
-            art.bracket(p.d, xs[adsr[0]] - 30, xs[adsr[-1]] + 30, 146, "ENVELOPE")
+            art.bracket(p.d, xs[adsr[0]] - 30, xs[adsr[-1]] + 30, Y(146), "ENVELOPE")
         for i, (k, nm, s) in enumerate(ctl):
             p.fader(k, xs[i], Y0, Y1, nm, s, red=nm == "DEPTH")
         keys = [c[0] for c in ctl]
-        p.qlink_group((x0, 92, x1, 620), keys[-4:] if len(keys) > 4 else keys)
+        p.qlink_group((x0, Y(92), x1, Y(620)), keys[-4:] if len(keys) > 4 else keys)
     return p
 
 
 def fx_page():
     """EFFECTS: chorus (type list on the LCD), delay, portamento, bend, solo / legato and morphing."""
     p = Page("EFFECTS", "EFFECTS", 5)
-    header(p)
-    p.section(16, 92, 630, 356, "CHORUS", q=True)
-    p.lcd(36, 136, 400, 320)
-    p.lcd_param("chorus_type", 36, 140, 364, 80, "TYPE", "SUPER CHORUS SLW", size=22.0)
-    art.lcd_rule(p.d, 44, 392, 228)
-    p.lcd_param("up_chorus_sync", 36, 234, 364, 80, "TEMPO SYNC (UPPER)", "OFF", size=22.0)
-    knob_row(p, 400, 624, 250, [("chorus_level", "LEVEL", .3)])
-    p.qlink_group((16, 92, 630, 356), ["chorus_type", "chorus_level", "up_chorus_sync"])
-    p.section(642, 92, 1264, 356, "DELAY", q=True)
-    p.lcd(662, 136, 900, 320)
-    p.lcd_param("delay_type", 662, 140, 238, 80, "TYPE", "PANNING L->R", size=20.0)
-    art.lcd_rule(p.d, 670, 892, 228)
-    p.lcd_param("up_delay_sync", 662, 234, 238, 80, "TEMPO SYNC (UPPER)", "OFF", size=20.0)
-    knob_row(p, 904, 1258, 250, [("delay_time", "TIME", .5), ("delay_feedback", "FEEDBACK", .3), ("delay_level", "LEVEL", .3)])
-    p.qlink_group((642, 92, 1264, 356), ["delay_time", "delay_feedback", "delay_level", "delay_type"])
-    p.section(16, 368, 630, 620, "PORTAMENTO / BEND", q=True)
-    p.toggle("portamento", 40, 420, 120, 44, "PORTA")
-    knob_row(p, 170, 624, 470, [("portamento_time", "PORTA TIME", .3), ("bend_up", "BEND UP", .1), ("bend_down", "BEND DOWN", .9)])
-    p.qlink_group((16, 368, 630, 620), ["portamento_time", "bend_up", "bend_down", "portamento"])
-    p.section(642, 368, 1264, 620, "CONTROL")
-    art.bracket(p.d, 672, 930, 430, "SOLO SW")
-    p.toggle("mono", 672, 450, 120, 44, "MONO")
-    p.toggle("legato", 810, 450, 120, 44, "LEGATO")
-    art.bracket(p.d, 960, 1234, 430, "MORPHING")
-    p.toggle("morph_bend", 960, 450, 130, 44, "BEND MORPH")
-    p.toggle("velocity_switch", 1104, 450, 130, 44, "VELOCITY")
-    art.bracket(p.d, 672, 1234, 530, "ACTIVE")
-    p.toggle("active_velocity", 672, 550, 170, 44, "VELOCITY")
-    p.toggle("active_control", 868, 550, 170, 44, "CONTROL")
-    p.toggle("active_bender", 1064, 550, 170, 44, "BENDER")
+    p.section(16, Y(92), 630, Y(356), "CHORUS", q=True)
+    p.lcd(36, Y(136), 400, Y(320))
+    p.lcd_param("chorus_type", 36, Y(140), 364, 80, "TYPE", "SUPER CHORUS SLW", size=22.0)
+    art.lcd_rule(p.d, 44, 392, Y(228))
+    p.lcd_param("up_chorus_sync", 36, Y(234), 364, 80, "TEMPO SYNC (UPPER)", "OFF", size=22.0)
+    knob_row(p, 400, 624, Y(250), [("chorus_level", "LEVEL", .3)], D=96)
+    p.qlink_group((16, Y(92), 630, Y(356)), ["chorus_type", "chorus_level", "up_chorus_sync"])
+    p.section(642, Y(92), 1264, Y(356), "DELAY", q=True)
+    p.lcd(662, Y(136), 900, Y(320))
+    p.lcd_param("delay_type", 662, Y(140), 238, 80, "TYPE", "PANNING L->R", size=20.0)
+    art.lcd_rule(p.d, 670, 892, Y(228))
+    p.lcd_param("up_delay_sync", 662, Y(234), 238, 80, "TEMPO SYNC (UPPER)", "OFF", size=20.0)
+    knob_row(p, 904, 1258, Y(250), [("delay_time", "TIME", .5), ("delay_feedback", "FEEDBACK", .3), ("delay_level", "LEVEL", .3)], D=84)
+    p.qlink_group((642, Y(92), 1264, Y(356)), ["delay_time", "delay_feedback", "delay_level", "delay_type"])
+    p.section(16, Y(368), 630, Y(620), "PORTAMENTO / BEND", q=True)
+    p.toggle("portamento", 40, Y(420), 120, 44, "PORTA")
+    knob_row(p, 170, 624, Y(470), [("portamento_time", "PORTA TIME", .3), ("bend_up", "BEND UP", .1), ("bend_down", "BEND DOWN", .9)], D=96)
+    p.qlink_group((16, Y(368), 630, Y(620)), ["portamento_time", "bend_up", "bend_down", "portamento"])
+    p.section(642, Y(368), 1264, Y(620), "CONTROL")
+    art.bracket(p.d, 672, 930, Y(430), "SOLO SW")
+    p.toggle("mono", 672, Y(450), 120, 44, "MONO")
+    p.toggle("legato", 810, Y(450), 120, 44, "LEGATO")
+    art.bracket(p.d, 960, 1234, Y(430), "MORPHING")
+    p.toggle("morph_bend", 960, Y(450), 130, 44, "BEND MORPH")
+    p.toggle("velocity_switch", 1104, Y(450), 130, 44, "VELOCITY")
+    art.bracket(p.d, 672, 1234, Y(530), "ACTIVE")
+    p.toggle("active_velocity", 672, Y(550), 170, 44, "VELOCITY")
+    p.toggle("active_control", 868, Y(550), 170, 44, "CONTROL")
+    p.toggle("active_bender", 1064, Y(550), 170, 44, "BENDER")
     return p
 
 
 def perform_page():
     """PERFORM: key mode, split, part detune, voices, output; the arpeggiator; the upper and lower parts; individual trigger."""
     p = Page("PERFORM", "PERFORM", 6)
-    header(p)
-    p.section(16, 92, 630, 356, "KEY MODE", q=True)
-    p.segments("key_mode", 36, 130, 576, 36, gap=10, size=14)
-    p.segments("edit_part", 36, 178, 576, 36, labels=["UPPER", "LOWER", "UPPER & LOWER"], gap=10, size=14)
-    knob_row(p, 22, 624, 284, [("split_point", "SPLIT POINT", .45), ("part_detune", "PART DETUNE", .5)], D=72)
-    p.qlink_group((16, 92, 630, 356), ["split_point", "part_detune", "key_mode", "edit_part"])
-    p.section(642, 92, 1264, 356, "VOICES / OUTPUT", q=True)
-    p.lcd(662, 136, 950, 196)
-    p.lcd_param("voice_assign", 662, 136, 288, 60, "VOICE ASSIGN (UPPER-LOWER)", "8-2", size=22.0)
-    p.legend(1100, 128, "OUTPUT", 14, art.ORANGE)
-    p.segments("output_assign", 972, 152, 270, 40, labels=["MIX", "PARALLEL"], gap=10, size=14)
-    knob_row(p, 648, 1258, 284, [("up_transpose", "UPPER TRANSPOSE", .5), ("lo_transpose", "LOWER TRANSPOSE", .5)], D=72)
-    p.qlink_group((642, 92, 1264, 356), ["voice_assign", "up_transpose", "lo_transpose", "output_assign"])
-    p.section(16, 368, 1264, 620, "ARPEGGIATOR / RPS", q=True)
-    p.toggle("arp_switch", 40, 420, 110, 44, "ON")
-    p.toggle("arp_hold", 40, 486, 110, 44, "HOLD")
-    p.lcd(180, 412, 1010, 476)
+    p.section(16, Y(92), 630, Y(356), "KEY MODE", q=True)
+    p.segments("key_mode", 36, Y(130), 576, 36, gap=10, size=14)
+    p.segments("edit_part", 36, Y(178), 576, 36, labels=["UPPER", "LOWER", "UPPER & LOWER"], gap=10, size=14)
+    knob_row(p, 22, 624, Y(284), [("split_point", "SPLIT POINT", .45), ("part_detune", "PART DETUNE", .5)], D=88)
+    p.qlink_group((16, Y(92), 630, Y(356)), ["split_point", "part_detune", "key_mode", "edit_part"])
+    p.section(642, Y(92), 1264, Y(356), "VOICES / OUTPUT", q=True)
+    p.lcd(662, Y(136), 950, Y(196))
+    p.lcd_param("voice_assign", 662, Y(136), 288, 60, "VOICE ASSIGN (UPPER-LOWER)", "8-2", size=22.0)
+    p.legend(1100, Y(128), "OUTPUT", 14, art.ORANGE)
+    p.segments("output_assign", 972, Y(152), 270, 40, labels=["MIX", "PARALLEL"], gap=10, size=14)
+    knob_row(p, 648, 1258, Y(284), [("up_transpose", "UPPER TRANSPOSE", .5), ("lo_transpose", "LOWER TRANSPOSE", .5)], D=88)
+    p.qlink_group((642, Y(92), 1264, Y(356)), ["voice_assign", "up_transpose", "lo_transpose", "output_assign"])
+    p.section(16, Y(368), 1264, Y(620), "ARPEGGIATOR / RPS", q=True)
+    p.toggle("arp_switch", 40, Y(420), 110, 44, "ON")
+    p.toggle("arp_hold", 40, Y(486), 110, 44, "HOLD")
+    p.lcd(180, Y(412), 1010, Y(476))
     lf = [("arp_mode", "MODE", "UP", 160), ("arp_beat", "BEAT", "1/16", 230), ("arp_range", "RANGE", "1 OCT", 140), ("arp_dest", "DEST", "LOWER & UPPER", 300)]
     x = 180
     for k, cap, smp, w in lf:
-        p.lcd_param(k, x, 412, w, 64, cap, smp, size=20.0)
+        p.lcd_param(k, x, Y(412), w, 64, cap, smp, size=20.0)
         x += w
         if x < 1000:
-            art.lcd_vrule(p.d, x, 418, 470)
-    knob_row(p, 1020, 1258, 470, [("tempo", "TEMPO", .45)], red=("tempo",))
-    p.lcd(180, 516, 1010, 580)
+            art.lcd_vrule(p.d, x, Y(418), Y(470))
+    knob_row(p, 1020, 1258, Y(470), [("tempo", "TEMPO", .45)], red=("tempo",), D=96)
+    p.lcd(180, Y(516), 1010, Y(580))
     tf = [("trigger_dest", "TRIGGER DEST", "FILTER ENV", 260), ("trigger_ch", "TRIGGER CH", "10", 180), ("trigger_note", "TRIGGER NOTE", "ALL", 200),
           ("up_lfo1_sync", "LFO1 SYNC", "OFF", 190)]
     x = 180
     for k, cap, smp, w in tf:
-        p.lcd_param(k, x, 516, w, 64, cap, smp, size=20.0)
+        p.lcd_param(k, x, Y(516), w, 64, cap, smp, size=20.0)
         x += w
         if x < 1000:
-            art.lcd_vrule(p.d, x, 522, 574)
-    p.toggle("trigger_switch", 40, 552, 110, 44, "TRIGGER")
-    p.qlink_group((16, 368, 1264, 620), ["arp_mode", "arp_beat", "arp_range", "tempo"])
+            art.lcd_vrule(p.d, x, Y(522), Y(574))
+    p.toggle("trigger_switch", 40, Y(552), 110, 44, "TRIGGER")
+    p.qlink_group((16, Y(368), 1264, Y(620)), ["arp_mode", "arp_beat", "arp_range", "tempo"])
     return p
 
 
@@ -574,22 +574,21 @@ def assign_pages(title, fn):
     for sub in range(3):
         part = keys[sub * 16:(sub + 1) * 16]
         p = Page("%s %d" % (title, sub + 1), title, fn, sub)
-        header(p)
         rows = [part[i:i + 4] for i in range(0, len(part), 4)]
         for r, row in enumerate(rows):
-            y0 = 92 + r * 132
-            p.section(16, y0, 1264, y0 + 124, None, q=True)
+            y0 = 8 + r * 150
+            p.section(16, y0, 1264, y0 + 142, None, q=True)
             for c, k in enumerate(row):
                 cx = 16 + 156 + c * 312
-                p.knob(k, cx - 90, y0 + 70, "", .5, D=70, show_value=False)
-                art.legend(p.d, cx - 48, y0 + 44, nice(k[len(pre):]), 14, art.INK, anchor="la")
-                p.value(k, cx - 48, y0 + 64, 160, 26, just="left verticallyCentred", colour="ffff6a14", size=22.0, sample="+0")
-            p.qlink_group((16, y0, 1264, y0 + 124), row)
+                p.knob(k, cx - 86, y0 + 72, "", .5, D=96, show_value=False)
+                art.legend(p.d, cx - 48, y0 + 50, nice(k[len(pre):]), 14, art.INK, anchor="la")
+                p.value(k, cx - 48, y0 + 72, 160, 30, just="left verticallyCentred", colour="ffff6a14", size=26.0, sample="+0")
+            p.qlink_group((16, y0, 1264, y0 + 142), row)
         if sub == 2:
-            p.section(16, 92 + len(rows) * 132, 1264, 620, title + (" (MORPH)" if title == "CONTROL" else ""))
+            p.section(16, 8 + len(rows) * 150, 1264, 620, title + (" (MORPH)" if title == "CONTROL" else ""))
             msg = "CONTROL: the depth each control slider / morph sends to a parameter" if title == "CONTROL" else \
                   "VELOCITY: how much key velocity moves each parameter (VELOCITY on the EFFECTS page turns it on)"
-            art.legend(p.d, 640, 92 + len(rows) * 132 + 60, msg, 15, art.INK_DIM)
+            art.legend(p.d, 640, 8 + len(rows) * 150 + 60, msg, 15, art.INK_DIM)
         pages.append(p)
     return pages
 
