@@ -7,7 +7,7 @@ It runs the JP-8000's original firmware on [gearmulator](https://github.com/dsp5
 The ARM64 speed-ups come from [schwung-je8086](https://github.com/charlesvestal/schwung-je8086). The look comes from gearmulator's
 "jeTrancy" JE-8086 skin.
 
-![MAIN page](docs/skin-preview/main.png)
+![MAIN page on an MPC Live III](docs/screenshots/main.png)
 
 ## Features
 - **The real JP-8000 engine:** the original OS runs on emulated hardware, so you get the supersaw, feedback osc, filters, effects, arpeggiator and
