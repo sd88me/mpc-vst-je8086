@@ -32,17 +32,32 @@ The ARM64 speed-ups come from [schwung-je8086](https://github.com/charlesvestal/
 ![ENVELOPES page on an MPC Live III](docs/screenshots/envelopes.png)
 
 ## Requirements
-- An MPC Gen2 standalone device (aarch64, e.g. MPC Live III) running **MPC OS 3.10 or later**. Gen1 devices and the Force aren't supported:
+- An MPC Gen2 standalone device (aarch64, e.g. MPC Live III) running **MPC OS 3.10 or later** (3.10.1 or later for the SDK-format zip). Gen1 devices and the Force aren't supported:
   the emulator's recompiler has no 32-bit ARM backend.
 - **Your own JP-8000 ROM.** No ROM is included, and none may be shared. Either the eight JP-8000 OS update files (`_00001.mid` to `_00008.mid`)
   or a full ROM dump (`.bin`) work.
 
 ## Install
-- **Plugin Manager** (or the Open MPC catalog): install **JE-8086**, then add your ROM in its ROM step.
-- **By hand:** download `JE-8086-<version>-mpc-sdk.zip` from [Releases](https://github.com/sd88me/mpc-vst-je8086/releases), unzip it and copy the
-  `sd88me - VST - JE-8086` folder into `VST2 Plugins` on a drive the MPC can see. Put your ROM files in its `je8086/roms/` folder (optional:
-  extra banks in `je8086/banks/`).
-- **Upgrading from 0.1.x:** install over the old folder (merge it, don't delete the old folder first) so your ROM and favourites stay.
+There are two plugin formats. Use one of them, not both: they are the same plugin.
+
+| Plugin format | Zip | How it is installed | Plugin folder |
+|---|---|---|---|
+| **SDK format** (MPC OS 3.10.1 or later) | `JE-8086-<version>-mpc-sdk.zip` | By hand: unzip it, copy the folder `sd88me - VST - JE-8086` into `VST2 Plugins` at the root of a drive the MPC can see, turn on **Preferences > Enhancements (Beta) > Enable Enhancements** and **External Plugin Support**, and restart the MPC | `VST2 Plugins/sd88me - VST - JE-8086/` on that drive |
+| **Older format** (plugins listed in `MPC.settings`) | `JE-8086-<version>-mpc-aarch64.zip` | With the **OpenMPC Plugin Manager**, or by hand over SSH with the zip's `install.sh` (needs root access; on a Live III add `-t /nvme/Synths`) | `sd88me - VST - JE-8086/` in the Synths folder it was installed to |
+
+Both zips are on [Releases](https://github.com/sd88me/mpc-vst-je8086/releases).
+
+### Adding your ROM
+Put your ROM files in the plugin folder's `je8086/roms/` (the zip already has the folder), for example
+`VST2 Plugins/sd88me - VST - JE-8086/je8086/roms/`. Extra banks go in `je8086/banks/` (optional). Copy them over USB, with
+`scp`, or with the MPC's file browser. This is the same for both formats: the OpenMPC Plugin Manager has no ROM step for
+JE-8086, so copy the ROM by hand after installing.
+
+### Upgrading
+- **SDK format:** copy the new folder over the old one (merge it, don't delete the old folder first) so your ROM, banks and
+  favourites stay. A 0.1.x install copied by hand keeps working: its ROM in `VST/je8086/roms/` is used while `je8086/roms/` is empty.
+- **Older format:** the OpenMPC Plugin Manager and `install.sh` upgrade in place and keep `je8086/roms/`, `je8086/banks/` and
+  your favourites.
 
 Load **JE-8086** on a plugin track. The firmware boots in about a second; if the status line on MAIN says no ROM was found, check the ROM folder.
 
